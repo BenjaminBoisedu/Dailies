@@ -62,15 +62,26 @@ import com.example.helloworld.presentations.StandardPriority
 import com.example.helloworld.presentations.navigation.Screen
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableChipColors
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.text.font.FontWeight
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("InvalidColorHexValue", "RememberReturnType", "CoroutineCreationDuringComposition")
+@SuppressLint("InvalidColorHexValue", "RememberReturnType", "CoroutineCreationDuringComposition",
+    "SuspiciousIndentation"
+)
 @Composable
 fun AddEditStoryScreen(
     navController: NavController,
@@ -81,11 +92,40 @@ fun AddEditStoryScreen(
         HighPriority to "High"
     )
     var selectedPriority by remember { mutableStateOf(viewModel.story.value.priority) }
-        Column(
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding -> Modifier.padding(padding) }
+    LaunchedEffect(true) {
+        viewModel.eventFlow.collectLatest { event ->
+            when (event) {
+                is AddEditStoryUiEvent.SavedStory -> {
+                    navController.navigate(Screen.StoriesListScreen.route)
+                }
+                is AddEditStoryUiEvent.ShowMessage -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
+            }
+        }
+    }
+        Column (
             Modifier
                 .background(Color(0xFF303030))
-                .fillMaxSize(),
+                .fillMaxSize (),
         ) {
+            LaunchedEffect(true) {
+                viewModel.eventFlow.collectLatest { event ->
+                    when (event) {
+                        is AddEditStoryUiEvent.SavedStory -> {
+                            navController.navigate(Screen.StoriesListScreen.route)
+                        }
+                        is AddEditStoryUiEvent.ShowMessage -> {
+                            snackbarHostState.showSnackbar(event.message)
+                        }
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(16.dp))
             Row (
                 modifier = Modifier
@@ -407,11 +447,41 @@ fun AddEditStoryScreen(
                             fontFamily = MaterialTheme.typography.headlineMedium.fontFamily
                         )
                         Spacer(modifier = Modifier.width(16.dp))
+                        LaunchedEffect(true) {
+                            viewModel.eventFlow.collectLatest { event ->
+                                when (event) {
+                                    is AddEditStoryUiEvent.SavedStory -> {
+                                        navController.navigate(Screen.StoriesListScreen.route)
+                                    }
+                                    is AddEditStoryUiEvent.ShowMessage -> {
+                                        snackbarHostState.showSnackbar(event.message)
+                                    }
+                                }
+                            }
+                        }
                             Button(
                                 onClick = {
-                                    viewModel.onEvent(AddEditStoryEvent.SaveStory)
-                                    navController.navigate(Screen.StoriesListScreen.route)
-                                    println("Save button clicked")
+                                    when {
+                                        viewModel.story.value.title.isBlank() -> {
+                                            viewModel.onEvent(AddEditStoryEvent.SaveStory) // This will trigger ShowMessage event
+                                        }
+                                        viewModel.story.value.description?.isBlank() != false -> {
+                                            viewModel.onEvent(AddEditStoryEvent.SaveStory) // This will trigger ShowMessage event
+                                        }
+                                        viewModel.story.value.date.isBlank() -> {
+                                            viewModel.onEvent(AddEditStoryEvent.SaveStory) // This will trigger ShowMessage event
+                                        }
+                                        viewModel.story.value.time.isBlank() -> {
+                                            viewModel.onEvent(AddEditStoryEvent.SaveStory) // This will trigger ShowMessage event
+                                        }
+                                        viewModel.story.value.priority == null -> {
+                                            viewModel.onEvent(AddEditStoryEvent.SaveStory) // This will trigger ShowMessage event
+                                        }
+                                        else -> {
+                                            viewModel.onEvent(AddEditStoryEvent.SaveStory)
+                                            navController.navigate(Screen.StoriesListScreen.route)
+                                        }
+                                    }
                                 },
                                 modifier = Modifier.fillMaxWidth()
                                 .height(50.dp),

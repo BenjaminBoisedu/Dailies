@@ -16,6 +16,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.room.Room
+import com.example.helloworld.data.source.StoriesDatabase
 
 import com.example.helloworld.presentations.addedit.AddEditStoryScreen
 import com.example.helloworld.presentations.addedit.AddEditStoryViewModel
@@ -27,6 +29,17 @@ import com.example.helloworld.ui.theme.HelloWorldTheme
 
 
 class MainActivity : ComponentActivity() {
+
+    private val db by lazy {
+        Room.databaseBuilder(
+            applicationContext,
+            StoriesDatabase::class.java,
+            StoriesDatabase.DATABASE_NAME
+        )
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +47,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HelloWorldTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { _ ->
+                Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
                     val navController = rememberNavController()
 
                     NavHost(
@@ -43,7 +56,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding()
                     ) {
                         composable(Screen.StoriesListScreen.route) {
-                            val stories = viewModel<ListStoriesViewModel>()
+                            val stories = viewModel<ListStoriesViewModel>{
+                                ListStoriesViewModel(db.dao)
+                            }
                             ListStoriesScreen(navController, stories)
                         }
                         composable(Screen.AddEditStoryScreen.route + "?storyId={storyId}",
@@ -55,7 +70,7 @@ class MainActivity : ComponentActivity() {
                         ) { navBackStackEntry ->
                             val storyId = navBackStackEntry.arguments?.getInt("storyId") ?: -1
                             val story = viewModel<AddEditStoryViewModel>{
-                                AddEditStoryViewModel(storyId)
+                                AddEditStoryViewModel(db.dao, storyId)
                             }
                             AddEditStoryScreen(navController, story)
                         }
