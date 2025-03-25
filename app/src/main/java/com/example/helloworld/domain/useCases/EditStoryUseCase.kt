@@ -14,7 +14,7 @@ class EditStoryUseCase(private val storiesDao: StoriesDao) {
     // Met à jour la story
     @Throws(StoryException::class)
     suspend fun updateStory(story: Story) {
-        if (story.title.isEmpty() || story.description.isEmpty()) {
+        if (story.title.isEmpty() || story.description.isEmpty() || story.date.isEmpty() || story.time.isEmpty()) {
             throw StoryException("Story data is invalid")
         }
         storiesDao.upsertStory(story)
