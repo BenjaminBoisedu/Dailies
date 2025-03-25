@@ -15,6 +15,9 @@ interface StoriesDao {
     @Query("SELECT * FROM stories")
     fun getStories() : Flow<List<Story>>
 
+    @Query("SELECT * FROM stories WHERE id = :id")
+    fun getStoryById(id: Int) : Flow<Story>
+
     @Query("SELECT * FROM stories WHERE ID = :id")
     fun getStory(id: Int) : Story?
 
