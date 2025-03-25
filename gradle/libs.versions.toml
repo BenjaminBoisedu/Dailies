@@ -16,6 +16,9 @@ junitKtx = "1.2.1"
 workTesting = "2.10.0"
 roomVersion = "2.6.1"
 kspVersion = "2.0.0-1.0.24"
+hilt = "2.49"
+daggerHiltVersion = "2.49"
+hiltNavigationComposeVersion = "1.1.0"
 
 [libraries]
 
@@ -27,6 +30,9 @@ androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecyc
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-lifecycle-viewmodel-compose = { group="androidx.lifecycle", name = "lifecycle-viewmodel-compose" , version.ref="lifecycleRuntimeKtx"}
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomVersion"}
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationComposeVersion" }
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "daggerHiltVersion" }
+hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "daggerHiltVersion" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion"}
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomVersion"}
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -49,4 +55,5 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "kspVersion"}
+hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "daggerHiltVersion" }
 

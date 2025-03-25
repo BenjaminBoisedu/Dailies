@@ -3,18 +3,26 @@ package com.example.helloworld.presentations.addedit
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.helloworld.data.source.StoriesDao
+import com.example.helloworld.domain.useCases.StoriesUseCases
 import com.example.helloworld.presentations.list.StoryVM
 import com.example.helloworld.presentations.list.toEntity
+import com.example.helloworld.utils.findStory
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class AddEditStoryViewModel(val dao: StoriesDao, storyId: Int = -1) : ViewModel() {
+@HiltViewModel
+class AddEditStoryViewModel @Inject constructor
+    (private val storiesUseCases: StoriesUseCases,
+     savedStateHandle : SavedStateHandle
+            ) : ViewModel() {
     private val _story = mutableStateOf(StoryVM())
     val story : State<StoryVM> = _story
 
@@ -22,14 +30,8 @@ class AddEditStoryViewModel(val dao: StoriesDao, storyId: Int = -1) : ViewModel(
     val eventFlow = _eventFlow.asSharedFlow()
 
     init {
-        viewModelScope.launch {
-            val storyEntity = withContext(Dispatchers.IO) {
-                dao.getStory(storyId)
-            }
-            storyEntity?.let {
-                _story.value = StoryVM.fromEntity(it)
-            }
-        }
+        val storyId = savedStateHandle.get<Int>("storyId") ?: -1
+        findStory((storyId))
     }
 
     fun onEvent(event: AddEditStoryEvent) {
@@ -60,7 +62,7 @@ class AddEditStoryViewModel(val dao: StoriesDao, storyId: Int = -1) : ViewModel(
 
                     story.value.toEntity()?.let { entity ->
                         withContext(Dispatchers.IO) {
-                            dao.upsertStory(entity)
+                            storiesUseCases.upsertStory(entity)
                         }
                         _eventFlow.emit(AddEditStoryUiEvent.SavedStory)
                     }

@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.helloworld.R
 import com.example.helloworld.presentations.components.StoryCard
@@ -56,7 +57,7 @@ import kotlinx.coroutines.launch
     "SuspiciousIndentation"
 )
 @Composable
-fun ListStoriesScreen(navController: NavController, viewModel: ListStoriesViewModel) {
+fun ListStoriesScreen(navController: NavController, viewModel: ListStoriesViewModel  = hiltViewModel()) {
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()

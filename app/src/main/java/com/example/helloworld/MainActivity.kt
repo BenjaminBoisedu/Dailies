@@ -26,8 +26,9 @@ import com.example.helloworld.presentations.list.ListStoriesScreen
 import com.example.helloworld.presentations.list.ListStoriesViewModel
 import com.example.helloworld.presentations.navigation.Screen
 import com.example.helloworld.ui.theme.HelloWorldTheme
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val db by lazy {
@@ -56,10 +57,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding()
                     ) {
                         composable(Screen.StoriesListScreen.route) {
-                            val stories = viewModel<ListStoriesViewModel>{
-                                ListStoriesViewModel(db.dao)
-                            }
-                            ListStoriesScreen(navController, stories)
+                            ListStoriesScreen(navController)
                         }
                         composable(Screen.AddEditStoryScreen.route + "?storyId={storyId}",
                             arguments = listOf(
@@ -68,11 +66,7 @@ class MainActivity : ComponentActivity() {
                                 defaultValue = -1}
                             )
                         ) { navBackStackEntry ->
-                            val storyId = navBackStackEntry.arguments?.getInt("storyId") ?: -1
-                            val story = viewModel<AddEditStoryViewModel>{
-                                AddEditStoryViewModel(db.dao, storyId)
-                            }
-                            AddEditStoryScreen(navController, story)
+                            AddEditStoryScreen(navController)
                         }
                         composable(Screen.DetailStoryScreen.route) {
                             val viewModel: ListStoriesViewModel = viewModel()

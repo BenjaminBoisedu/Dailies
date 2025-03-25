@@ -7,3 +7,4 @@ sealed class Screen(val route: String) {
     data object DetailStoryScreen : Screen(route = "detail_story_screen")
 
 }
+

@@ -5,20 +5,24 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.helloworld.data.source.StoriesDao
 import com.example.helloworld.domain.model.Story
+import com.example.helloworld.domain.useCases.StoriesUseCases
 import com.example.helloworld.presentations.PriorityType
 import com.example.helloworld.presentations.StandardPriority
-import com.example.helloworld.utils.getStories
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import javax.inject.Inject
 import kotlin.random.Random
 
-class ListStoriesViewModel (val dao: StoriesDao) : ViewModel()  {
-    private val _stories : MutableState<List<StoryVM>> = mutableStateOf(emptyList())
+@HiltViewModel
+class ListStoriesViewModel @Inject constructor(
+    private val storiesUseCases: StoriesUseCases
+) : ViewModel() {
+    private val _stories: MutableState<List<StoryVM>> = mutableStateOf(emptyList())
     var stories: State<List<StoryVM>> = _stories
-    var job: Job? = null
+    private var job: Job? = null
 
     init {
        loadStories()
@@ -26,10 +30,8 @@ class ListStoriesViewModel (val dao: StoriesDao) : ViewModel()  {
 
     private fun loadStories() {
         job?.cancel()
-        job = dao.getStories().onEach { stories ->
-            _stories.value = stories.map {
-                StoryVM.fromEntity(it)
-            }
+        job = storiesUseCases.getStories().onEach { stories ->
+            _stories.value = stories.map { StoryVM.fromEntity(it) }
         }.launchIn(viewModelScope)
     }
 

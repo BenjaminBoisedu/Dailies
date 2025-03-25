@@ -71,8 +71,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.text.font.FontWeight
+import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -85,8 +85,8 @@ import java.util.Locale
 @Composable
 fun AddEditStoryScreen(
     navController: NavController,
-    viewModel: AddEditStoryViewModel,
-    ) {
+    viewModel: AddEditStoryViewModel = hiltViewModel()
+) {
     val listPriority = mapOf(
         StandardPriority to "Standard",
         HighPriority to "High"
