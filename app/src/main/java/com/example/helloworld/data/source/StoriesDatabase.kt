@@ -6,7 +6,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.helloworld.domain.model.Story
 
-@Database(entities = [Story::class], version = 3)
+@Database(entities = [Story::class], version = 4)
 abstract class StoriesDatabase : RoomDatabase() {
     abstract val dao: StoriesDao
 
@@ -33,6 +33,9 @@ abstract class StoriesDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE stories ADD COLUMN latitude REAL")
                 db.execSQL("ALTER TABLE stories ADD COLUMN longitude REAL")
                 db.execSQL("ALTER TABLE stories ADD COLUMN locationName TEXT")
+                db.execSQL("ALTER TABLE stories ADD COLUMN isRecurring INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE stories ADD COLUMN recurringType TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE stories ADD COLUMN recurringInterval INTEGER NOT NULL DEFAULT 0")
             }
         }
     }

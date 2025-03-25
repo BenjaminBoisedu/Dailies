@@ -14,5 +14,8 @@ data class Story (
     val time : String,
     val latitude: Double? = null,
     val longitude: Double? = null,
-    val locationName: String? = null
+    val locationName: String? = null,
+    val isRecurring: Boolean = false,
+    val recurringType: String? = null,
+    val recurringInterval: Int? = null
 )
