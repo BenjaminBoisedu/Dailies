@@ -293,9 +293,10 @@ fun AddEditStoryScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
 
-                        val storyDate = story.date
                         var showDatePicker by remember { mutableStateOf(false) }
-                        var selectedDate by remember { mutableStateOf(storyDate) }
+                        var selectedDate by remember(viewModel.story.value.date) {
+                            mutableStateOf(viewModel.story.value.date)
+                        }
 
                         if (showDatePicker) {
                             val calendar = Calendar.getInstance()
@@ -363,8 +364,9 @@ fun AddEditStoryScreen(
                         val storyTimeMinutes = storyTime.substringAfter(":").toIntOrNull() ?: 0
                         val storyTimeHours = storyTime.substringBefore(":").toIntOrNull() ?: 0
                         var showTimePicker by remember { mutableStateOf(false) }
-                        var selectedTime by remember { mutableStateOf(story.time) }
-
+                        var selectedTime by remember(viewModel.story.value.time) {
+                            mutableStateOf(viewModel.story.value.time)
+                        }
                         if (showTimePicker) {
                             val timePickerState = rememberTimePickerState(
                                 initialHour = storyTimeHours,
