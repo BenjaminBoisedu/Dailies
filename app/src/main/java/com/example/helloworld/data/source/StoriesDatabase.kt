@@ -6,7 +6,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.helloworld.domain.model.Story
 
-@Database(entities = [Story::class], version = 2)
+@Database(entities = [Story::class], version = 3)
 abstract class StoriesDatabase : RoomDatabase() {
     abstract val dao: StoriesDao
 
@@ -15,7 +15,6 @@ abstract class StoriesDatabase : RoomDatabase() {
 
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Remove nested migrate function - this was causing the issue
                 val cursor = db.query("PRAGMA table_info(stories)")
                 val columnNames = mutableListOf<String>()
                 while (cursor.moveToNext()) {
@@ -26,6 +25,14 @@ abstract class StoriesDatabase : RoomDatabase() {
                 if (!columnNames.contains("priority")) {
                     db.execSQL("ALTER TABLE stories ADD COLUMN priority INTEGER NOT NULL DEFAULT 0")
                 }
+            }
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE stories ADD COLUMN latitude REAL")
+                db.execSQL("ALTER TABLE stories ADD COLUMN longitude REAL")
+                db.execSQL("ALTER TABLE stories ADD COLUMN locationName TEXT")
             }
         }
     }

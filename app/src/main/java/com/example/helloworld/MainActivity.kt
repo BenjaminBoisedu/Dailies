@@ -37,6 +37,7 @@ class MainActivity : ComponentActivity() {
             StoriesDatabase::class.java,
             StoriesDatabase.DATABASE_NAME
         )
+            .addMigrations(StoriesDatabase.MIGRATION_1_2, StoriesDatabase.MIGRATION_2_3)
             .fallbackToDestructiveMigration()
             .build()
     }
