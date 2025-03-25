@@ -1,6 +1,7 @@
 package com.example.helloworld.presentations.addedit
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -71,6 +73,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import java.util.Calendar
@@ -422,6 +425,88 @@ fun AddEditStoryScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(30.dp))
+                    // Après la section "Done"
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = viewModel.story.value.isRecurring,
+                            onCheckedChange = {
+                                viewModel.onEvent(AddEditStoryEvent.StoryRecurringChanged(it))
+                            },
+                            modifier = Modifier.align(Alignment.CenterVertically),
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = Color(0xFF99A4BE),
+                                uncheckedColor = Color(0xFF99A4BE)
+                            )
+                        )
+                        Text(
+                            text = "Recurring",
+                            fontSize = 20.sp,
+                            modifier = Modifier.align(Alignment.CenterVertically),
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                color = Color.White.copy(alpha = 0.8f)
+                            ),
+                            fontWeight = MaterialTheme.typography.headlineMedium.fontWeight,
+                            fontFamily = MaterialTheme.typography.headlineMedium.fontFamily
+                        )
+                    }
+
+                    // Afficher les options de récurrence si isRecurring est true
+                    AnimatedVisibility(visible = viewModel.story.value.isRecurring) {
+                        Column(modifier = Modifier.padding(start = 32.dp, top = 8.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                FilterChip(
+                                    onClick = { viewModel.onEvent(AddEditStoryEvent.RecurringTypeSelected("daily")) },
+                                    label = { Text("Daily") },
+                                    selected = viewModel.story.value.recurringType == "daily",
+                                )
+                                FilterChip(
+                                    onClick = { viewModel.onEvent(AddEditStoryEvent.RecurringTypeSelected("weekly")) },
+                                    label = { Text("Weekly") },
+                                    selected = viewModel.story.value.recurringType == "weekly",
+                                )
+                                FilterChip(
+                                    onClick = { viewModel.onEvent(AddEditStoryEvent.RecurringTypeSelected("monthly")) },
+                                    label = { Text("Monthly") },
+                                    selected = viewModel.story.value.recurringType == "monthly",
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Sélecteur d'intervalle
+                            var intervalText by remember {
+                                mutableStateOf(
+                                    if (viewModel.story.value.recurringInterval > 0)
+                                        viewModel.story.value.recurringInterval.toString()
+                                    else ""
+                                )
+                            }
+
+                            TextField(
+                                value = intervalText,
+                                onValueChange = {
+                                    intervalText = it.filter { char -> char.isDigit() }
+                                    val interval = intervalText.toIntOrNull() ?: 0
+                                    viewModel.onEvent(AddEditStoryEvent.RecurringIntervalChanged(interval))
+                                },
+                                label = { Text("Repeat every (interval)") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.fillMaxWidth()
+                                    .border(3.dp, Color.White, Shapes().medium),
+                                colors = TextFieldDefaults.colors(
+                                    focusedTextColor = Color.Black,
+                                ),
+                                shape = Shapes().medium
+                            )
+                        }
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically

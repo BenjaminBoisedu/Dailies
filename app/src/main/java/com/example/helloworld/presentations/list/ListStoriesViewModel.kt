@@ -72,8 +72,16 @@ data class StoryVM(
     val done: Boolean = false,
     val priority: PriorityType ?= StandardPriority,
     val date: String = "",
-    val time: String = ""
+    val time: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val locationName: String? = null,
+    val isRecurring: Boolean = false,
+    val recurringType: String = "", // "daily", "weekly", "monthly"
+    val recurringInterval: Int = 0 // 0 for daily, 1 for weekly, 2 for monthly
+
 ){
+
     companion object {
         fun fromEntity(entity: Story): StoryVM {
             return StoryVM(

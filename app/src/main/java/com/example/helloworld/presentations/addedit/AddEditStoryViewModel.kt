@@ -91,6 +91,16 @@ class AddEditStoryViewModel @Inject constructor(
                     }
                 }
             }
+
+           is AddEditStoryEvent.StoryRecurringChanged -> {
+                _story.value = _story.value.copy(isRecurring = event.isRecurring)
+            }
+            is AddEditStoryEvent.RecurringTypeSelected -> {
+                _story.value = _story.value.copy(recurringType = event.type)
+            }
+            is AddEditStoryEvent.RecurringIntervalChanged -> {
+                _story.value = _story.value.copy(recurringInterval = event.interval)
+            }
         }
     }
 }

@@ -18,9 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.room.Room
 import com.example.helloworld.data.source.StoriesDatabase
-
 import com.example.helloworld.presentations.addedit.AddEditStoryScreen
-import com.example.helloworld.presentations.addedit.AddEditStoryViewModel
 import com.example.helloworld.presentations.details.DetailStoryScreen
 import com.example.helloworld.presentations.list.ListStoriesScreen
 import com.example.helloworld.presentations.list.ListStoriesViewModel
@@ -37,7 +35,10 @@ class MainActivity : ComponentActivity() {
             StoriesDatabase::class.java,
             StoriesDatabase.DATABASE_NAME
         )
-            .addMigrations(StoriesDatabase.MIGRATION_1_2, StoriesDatabase.MIGRATION_2_3)
+            .addMigrations(
+                StoriesDatabase.MIGRATION_1_2,
+                StoriesDatabase.MIGRATION_2_3,
+            )
             .fallbackToDestructiveMigration()
             .build()
     }
@@ -66,7 +67,7 @@ class MainActivity : ComponentActivity() {
                                 { type = NavType.IntType
                                 defaultValue = -1}
                             )
-                        ) { navBackStackEntry ->
+                        ) {
                             AddEditStoryScreen(navController)
                         }
                         composable(Screen.DetailStoryScreen.route) {
@@ -78,7 +79,6 @@ class MainActivity : ComponentActivity() {
             }
         }
         scheduleNotificationWorker(applicationContext)
-
     }
 }
 

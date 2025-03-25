@@ -13,4 +13,8 @@ sealed interface AddEditStoryEvent {
     data class DateSelected(val date: String): AddEditStoryEvent
     data object SaveStory: AddEditStoryEvent
     data class PrioritySelected(val priority: PriorityType): AddEditStoryEvent
+    data class StoryRecurringChanged(val isRecurring: Boolean) : AddEditStoryEvent
+    data class RecurringTypeSelected(val type: String) : AddEditStoryEvent
+    data class RecurringIntervalChanged(val interval: Int) : AddEditStoryEvent
+
 }
