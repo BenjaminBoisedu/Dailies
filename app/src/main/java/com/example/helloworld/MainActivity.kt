@@ -38,14 +38,19 @@ class MainActivity : ComponentActivity() {
             .addMigrations(
                 StoriesDatabase.MIGRATION_1_2,
                 StoriesDatabase.MIGRATION_2_3,
+                StoriesDatabase.MIGRATION_3_4,
+                StoriesDatabase.MIGRATION_3_5,
             )
-            .fallbackToDestructiveMigration()
             .build()
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        runNotificationWorkerNow(applicationContext)
+
+        scheduleNotificationWorker(applicationContext)
 
         enableEdgeToEdge()
         setContent {
@@ -78,7 +83,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        scheduleNotificationWorker(applicationContext)
     }
 }
 
