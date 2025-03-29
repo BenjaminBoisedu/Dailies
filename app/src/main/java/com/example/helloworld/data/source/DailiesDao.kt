@@ -27,4 +27,6 @@ interface DailiesDao {
     @Delete
     suspend fun deleteDaily(daily: Daily) : Int
 
+    @Query("DELETE FROM dailies WHERE id = :id")
+    suspend fun deleteDailyById(id: Int) : Int
 }

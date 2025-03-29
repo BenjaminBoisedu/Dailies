@@ -34,15 +34,19 @@ class AddEditDailyViewModel @Inject constructor(
         if (dailyId != -1) {
             viewModelScope.launch {
                 dailiesUseCases.editDaily.getDaily(dailyId).collect { daily ->
-                    _daily.value = DailyVM(
-                        id = daily.id ?: -1, // Conversion en Int? nullable
-                        title = daily.title,
-                        description = daily.description,
-                        date = daily.date,
-                        time = daily.time,
-                        priority = daily.priority.toPriorityType(), // Conversion en PriorityType?
-                        done = daily.done
-                    )
+                    if (daily != null) {
+                        _daily.value = DailyVM(
+                            id = daily.id ?: -1,
+                            title = daily.title,
+                            description = daily.description,
+                            date = daily.date,
+                            time = daily.time,
+                            priority = daily.priority.toPriorityType(),
+                            done = daily.done
+                        )
+                    } else {
+                        _eventFlow.emit(AddEditDailyUiEvent.ShowMessage("Impossible de charger les détails"))
+                    }
                 }
             }
         }

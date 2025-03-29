@@ -11,7 +11,10 @@ class DeleteDailyUseCase(private val dailiesDao: DailiesDao) {
             if (daily == null) {
                 throw DailyException("Cannot delete a null Daily object", NullPointerException())
             }
-            val rowsDeleted = dailiesDao.deleteDaily(daily)
+
+            val id = daily.id ?: throw DailyException("Daily object has null ID", NullPointerException())
+
+            val rowsDeleted = dailiesDao.deleteDailyById(id)
             rowsDeleted > 0
         } catch (e: Exception) {
             throw DailyException(
