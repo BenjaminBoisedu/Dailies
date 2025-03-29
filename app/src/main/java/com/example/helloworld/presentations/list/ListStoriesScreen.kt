@@ -77,7 +77,7 @@ fun ListStoriesScreen(navController: NavController, viewModel: ListStoriesViewMo
                 )
                     {
                     Icon(imageVector = Icons.Default.Add,
-                        contentDescription = "Add a story")
+                        contentDescription = "Ajouter une routine",)
                 }
             }
         ) { contentPadding ->
@@ -102,7 +102,7 @@ fun ListStoriesScreen(navController: NavController, viewModel: ListStoriesViewMo
                     // Drawable of logo
 
                     Text(
-                        text = "My Dailies",
+                        text = "Mes routines",
                         modifier = Modifier
                             .padding(8.dp)
                             .background(Color.Transparent),
@@ -121,7 +121,7 @@ fun ListStoriesScreen(navController: NavController, viewModel: ListStoriesViewMo
                         IconButton(onClick = { expanded = true }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = "More options",
+                                contentDescription = "Menu",
                                 tint = Color.White
                             )
                         }
@@ -132,7 +132,7 @@ fun ListStoriesScreen(navController: NavController, viewModel: ListStoriesViewMo
                         ) {
                             DropdownMenuItem(
                                 modifier = Modifier.background(Color.Transparent),
-                                text = { Text("Settings") },
+                                text = { Text("Paramètres") },
                                 onClick = { /* Handle settings click */ },
                                 leadingIcon = {
                                     Icon(
@@ -152,7 +152,7 @@ fun ListStoriesScreen(navController: NavController, viewModel: ListStoriesViewMo
                             )
                             DropdownMenuItem(
                                 modifier = Modifier.background(Color.Transparent),
-                                text = { Text("About") },
+                                text = { Text("A propos") },
                                 onClick = { /* Handle about click */ },
                                 leadingIcon = {
                                     Icon(
@@ -186,14 +186,13 @@ fun ListStoriesScreen(navController: NavController, viewModel: ListStoriesViewMo
                     items(viewModel.stories.value) { story ->
                         StoryCard(story = story, onDeleteClick = {
                             viewModel.onEvent(StoryEvent.Delete(story))
-                            scope.launch { snackbarHostState.showSnackbar("Story deleted")
+                            scope.launch { snackbarHostState.showSnackbar("Routine supprimée")
                             }},
                             onEditClick = { navController.navigate(Screen.AddEditStoryScreen.route + "?storyId=${story.id}") },
                             onDetailClick = { navController.navigate(Screen.DetailStoryScreen.route)},
                         )
                     }
                 }
-
             }
         }
 }

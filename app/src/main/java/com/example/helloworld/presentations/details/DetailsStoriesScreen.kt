@@ -52,7 +52,7 @@ fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesVi
                 Modifier.padding(16.dp))
             {
                 Icon(imageVector = Icons.Default.Add,
-                    contentDescription = "Add a story")
+                    contentDescription = "Ajouter une routine",)
             }
         }
     ) { contentPadding ->
@@ -78,11 +78,11 @@ fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesVi
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back"
+                        contentDescription = "Retourner à la liste des routines",
                     )
                 }
                 Text(
-                    text = "Routine Details",
+                    text = "Détails de la routine",
                     modifier = Modifier
                         .padding(10.dp)
                         .align(Alignment.CenterVertically),
@@ -124,7 +124,7 @@ fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesVi
                     if (storyPriority == HighPriority) {
                         Icon(
                             imageVector = Icons.Default.Warning,
-                            contentDescription = "High Priority",
+                            contentDescription = "Haut Priorité",
                             modifier = Modifier
                                 .padding(8.dp)
                                 .align(Alignment.CenterVertically),
@@ -134,7 +134,7 @@ fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesVi
                     }else {
                         Icon(
                             imageVector = Icons.Default.Warning,
-                            contentDescription = "Standard Priority",
+                            contentDescription = "Priorité Standard",
                             modifier = Modifier
                                 .padding(8.dp)
                                 .align(Alignment.CenterVertically),
@@ -149,7 +149,7 @@ fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesVi
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = storyDate.toString(),
+                        text = storyDate,
                         modifier = Modifier
                             .padding(8.dp)
                             .background(Color.Transparent),
@@ -204,7 +204,7 @@ fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesVi
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Not Done",
+                                text = "Pas Terminé",
                                 modifier = Modifier
                                     .padding(8.dp)
                                     .background(Color.Transparent),
@@ -224,7 +224,7 @@ fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesVi
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
-                                    contentDescription = "Add a story",
+                                    contentDescription = "Modifier",
                                     Modifier.size(24.dp)
                                 )
                             }
