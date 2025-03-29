@@ -43,7 +43,7 @@ private val storiesList: MutableList<StoryVM> = mutableListOf(
         time = "12:00"
     )
 )
-class StoryException(message: String) : Throwable(message)
+class StoryException(message: String, e: Exception) : Throwable(message)
 
 fun getStories() = flow {
     emit(storiesList)
@@ -51,7 +51,7 @@ fun getStories() = flow {
 
 fun addOrUpdateStory(story: StoryVM) {
     if (story.title.isBlank() || story.description?.isBlank() != false || story.date.isBlank() || story.time.isBlank() || story.priority == null) {
-        throw StoryException("Unable to save story: Title cannot be empty")
+        throw StoryException("Unable to save story: Title cannot be empty", Exception("Title cannot be empty"))
     }
 
     val existingStory = storiesList.find { it.id == story.id }

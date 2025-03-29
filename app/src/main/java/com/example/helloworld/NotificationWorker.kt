@@ -58,24 +58,45 @@ class NotificationWorker(
                     val storyDateTime = getDateTimeFromStory(story)
                     val storyDate = LocalDate.parse(story.date, DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.getDefault()))
                     val currentDate = LocalDate.now()
+
                     // Check if the story date is today
                     if (storyDate != currentDate) {
                         return@filter false
                     }
+
                     // Check if the story is already done
                     if (story.done) {
                         return@filter false
                     }
 
                     val notificationTimeMinutes = story.notificationTime.toIntOrNull() ?: 30
-                    val notificationTimeMillis = storyDateTime - (notificationTimeMinutes * 60 * 1000L)
-                    // Check if now is the time to notify (within a 15-minute window to account for worker execution interval)
-                    val shouldNotify = currentTimeMillis >= notificationTimeMillis &&
-                            currentTimeMillis <= notificationTimeMillis + (15 * 60 * 1000)
+                    val storyTime = story.time.split(":")
+                    val hourMinute = storyTime[0].toInt() * 60 + storyTime[1].toInt()
 
-                    Log.d("NotificationWorker", "Story ${story.title} - Should notify: $shouldNotify")
+                    // Calculate the exact notification time in minutes of the day
+                    val notificationMinuteOfDay = hourMinute - notificationTimeMinutes
 
-                    shouldNotify
+                    // Get current hour and minute
+                    val calendar = java.util.Calendar.getInstance()
+                    val currentHour = calendar.get(java.util.Calendar.HOUR_OF_DAY)
+                    val currentMinute = calendar.get(java.util.Calendar.MINUTE)
+                    val currentMinuteOfDay = currentHour * 60 + currentMinute
+
+                    // Check if we're within a 5-minute window of the notification time
+                    val shouldNotify = currentMinuteOfDay >= notificationMinuteOfDay &&
+                            currentMinuteOfDay <= notificationMinuteOfDay + 5
+
+                    // Check if we've already sent this notification today
+                    val hasBeenNotified = hasNotificationBeenSent(story.id ?: 0, story.date)
+
+                    val willNotify = shouldNotify && !hasBeenNotified
+
+                    // Log for debugging
+                    if (shouldNotify) {
+                        Log.d("NotificationWorker", "Story ${story.title} - Should notify: $shouldNotify, Already notified: $hasBeenNotified")
+                    }
+
+                    willNotify
                 } catch (e: Exception) {
                     Log.e("NotificationWorker", "Error processing story: ${story.title}", e)
                     false
@@ -86,6 +107,11 @@ class NotificationWorker(
 
             if (storiesToNotify.isNotEmpty()) {
                 sendNotifications(storiesToNotify)
+
+                // Mark these notifications as sent
+                storiesToNotify.forEach { story ->
+                    markNotificationAsSent(story.id ?: 0, story.date)
+                }
             } else {
                 Log.d("NotificationWorker", "No stories to notify about right now")
             }
@@ -95,6 +121,20 @@ class NotificationWorker(
             Log.e("NotificationWorker", "Error in worker", e)
             return Result.failure()
         }
+    }
+
+    // Helper method to check if a notification has already been sent today
+    private fun hasNotificationBeenSent(storyId: Int, date: String): Boolean {
+        val prefs = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
+        val prefKey = "notification_sent_${storyId}_${date}"
+        return prefs.getBoolean(prefKey, false)
+    }
+
+    // Helper method to mark a notification as sent
+    private fun markNotificationAsSent(storyId: Int, date: String) {
+        val prefs = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
+        val prefKey = "notification_sent_${storyId}_${date}"
+        prefs.edit().putBoolean(prefKey, true).apply()
     }
 
     // Helper method to convert story date and time strings to timestamp
@@ -142,7 +182,7 @@ class NotificationWorker(
                 "60" -> "1 heure"
                 "120" -> "2 heures"
                 "1440" -> "1 jour"
-                else -> "${story.notificationTime} minutes"
+                else -> story.notificationTime
             }
 
             val contentText = "📝 Rappel: ${story.title} aura lieu dans $timeDesc - $dateFormatted à $timeFormatted"

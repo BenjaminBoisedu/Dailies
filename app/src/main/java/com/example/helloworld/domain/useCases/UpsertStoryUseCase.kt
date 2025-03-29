@@ -8,7 +8,7 @@ class UpsertStoryUseCase(private val storiesDao : StoriesDao) {
     @Throws(StoryException::class)
     suspend operator fun invoke(story: Story) {
         if (story.title.isEmpty() || story.description.isEmpty())
-            throw StoryException("Story data is invalid")
+            throw StoryException("Story data is invalid", IllegalArgumentException())
         storiesDao.upsertStory(story)
     }
 }

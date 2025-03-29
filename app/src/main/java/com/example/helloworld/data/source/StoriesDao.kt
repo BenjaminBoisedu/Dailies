@@ -24,5 +24,5 @@ interface StoriesDao {
     @Upsert
     suspend fun upsertStory(story: Story)
     @Delete
-    suspend fun deleteStory(story: Story)
+    suspend fun deleteStory(story: Story) : Int
 }

@@ -8,11 +8,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.helloworld.domain.model.Story
 import com.example.helloworld.domain.useCases.StoriesUseCases
 import com.example.helloworld.presentations.PriorityType
-import com.example.helloworld.presentations.StandardPriority
+import com.example.helloworld.utils.getStories
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -49,16 +50,38 @@ class ListStoriesViewModel @Inject constructor(
                         it
                     }
                 }
+                saveStoryToDatabase(event.story)
             }
             is StoryEvent.Detail ->
             { detailStory(event.story) }
 
         }
     }
+    private fun saveStoryToDatabase(story: StoryVM) {
+        story.toEntity()?.let { entity ->
+            viewModelScope.launch {
+                storiesUseCases.upsertStory(entity)
+            }
+        }
+    }
 
     fun deleteStory(story: StoryVM) {
-        _stories.value = _stories.value.filter { it != story }
+        story.toEntity()?.let { entity ->
+            viewModelScope.launch {
+                try {
+                    val isDeleted = storiesUseCases.deleteStory(entity)
+                    if (isDeleted) {
+                        // Manually update the state to remove the deleted story
+                        _stories.value = _stories.value.filter { it.id != story.id }
+                    }
+                    // The Flow collection in loadStories() will also handle updating the list
+                } catch (e: Exception) {
+                    // Handle error
+                }
+            }
+        }
     }
+
 
     private fun detailStory(story: StoryVM) {
         _stories.value = _stories.value.filter { it != story }
@@ -70,7 +93,7 @@ data class StoryVM(
     val title: String = "",
     val description: String? = "",
     val done: Boolean = false,
-    val priority: PriorityType ?= StandardPriority,
+    val priority: PriorityType? = null,
     val date: String = "",
     val time: String = "",
     val latitude: Double? = null,

@@ -129,11 +129,11 @@ fun AddEditStoryScreen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(26.dp))
             Row (
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically
 
             ) {
@@ -157,7 +157,7 @@ fun AddEditStoryScreen(
                 Text(
                     text = "Add a Daily",
                     modifier = Modifier
-                        .padding(10.dp)
+                        .padding(15.dp)
                         .align(Alignment.CenterVertically),
                     style = TextStyle(
                         fontSize = 28.sp,
@@ -169,7 +169,7 @@ fun AddEditStoryScreen(
             }
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp)
+                contentPadding = PaddingValues(10.dp)
             ) {
                 item{
                     val story = viewModel.story.value
@@ -197,7 +197,7 @@ fun AddEditStoryScreen(
                             placeholder = { Text("Description") },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(200.dp)
+                                .height(180.dp)
                                 .border(8.dp, Color.White, Shapes().medium),
                             colors = TextFieldDefaults.colors(
                                 focusedTextColor = Color.Black,
@@ -241,8 +241,7 @@ fun AddEditStoryScreen(
                             listPriority.forEach { priority ->
                             FilterChip(
                                 onClick = { selectedPriority = priority.key
-                                    viewModel.onEvent(AddEditStoryEvent.PrioritySelected(priority.key))
-                                          },
+                                    viewModel.onEvent(AddEditStoryEvent.PrioritySelected(priority.key)) },
                                 label = {
                                     Text(
                                         text = priority.value,
@@ -441,7 +440,6 @@ fun AddEditStoryScreen(
                         ) {
                             items(options.size) { index ->
                                 val selectedTime = viewModel.story.value.notificationTime
-                                val optionLabel = optionLabels[index]
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier
@@ -453,7 +451,7 @@ fun AddEditStoryScreen(
                                                 Color.LightGray
                                         )
                                         .clickable {
-                                            viewModel.onEvent(AddEditStoryEvent.NotificationTimeSelected(optionLabel))
+                                            viewModel.onEvent(AddEditStoryEvent.NotificationTimeSelected(options[index].toString()))
                                         }
                                         .padding(horizontal = 12.dp, vertical = 8.dp)
                                 ) {
@@ -464,6 +462,16 @@ fun AddEditStoryScreen(
                                         else
                                             Color.Black,
                                         style = MaterialTheme.typography.labelLarge
+                                        .copy(
+                                            color = Color.Black
+                                        )
+                                        .copy(
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        .copy(
+                                            fontFamily = MaterialTheme.typography.headlineMedium.fontFamily
+                                        )
                                     )
                                 }
                             }

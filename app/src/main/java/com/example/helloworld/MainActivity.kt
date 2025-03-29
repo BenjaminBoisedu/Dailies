@@ -1,15 +1,20 @@
 package com.example.helloworld
 
+import android.app.AlertDialog
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -28,6 +33,19 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permission granted, schedule notifications
+            scheduleNotificationWorker(applicationContext)
+        } else {
+            // Permission denied - you could show a message explaining
+            // that notifications won't work
+        }
+    }
 
     private val db by lazy {
         Room.databaseBuilder(
@@ -49,6 +67,8 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        askNotificationPermission()
 
         runNotificationWorkerNow(applicationContext)
 
@@ -84,6 +104,32 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+    private fun askNotificationPermission() {
+        // This is only necessary for API level >= 33 (TIRAMISU)
+        if (Build.VERSION.SDK_INT >= 33) {  // Build.VERSION_CODES.TIRAMISU = 33
+            val postNotificationPermission = "android.permission.POST_NOTIFICATIONS"
+
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    postNotificationPermission
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                // Permission is already granted, schedule notifications
+                runNotificationWorkerNow(applicationContext)
+                scheduleNotificationWorker(applicationContext)
+            } else if (shouldShowRequestPermissionRationale(postNotificationPermission)) {
+                // Directly request permission without dialog
+                requestPermissionLauncher.launch(postNotificationPermission)
+            } else {
+                // Directly request permission
+                requestPermissionLauncher.launch(postNotificationPermission)
+            }
+        } else {
+            // For Android < 13, notification permission is granted automatically
+            runNotificationWorkerNow(applicationContext)
+            scheduleNotificationWorker(applicationContext)
         }
     }
 }
