@@ -2,6 +2,7 @@ package com.example.helloworld.presentations.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,7 +58,8 @@ fun DailyCard(
                     shape = RoundedCornerShape(size = 15.dp)
                 )
                 .padding(3.dp)
-                .width(320.dp),
+                .width(320.dp)
+                .clickable { onEditClick(daily) },
             colors = CardDefaults.elevatedCardColors(
                 containerColor = daily.priority?.backgroundColor ?: Color.White,
                 contentColor = Color.White

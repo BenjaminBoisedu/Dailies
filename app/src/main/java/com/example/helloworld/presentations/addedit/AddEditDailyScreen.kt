@@ -445,10 +445,9 @@ fun AddEditDailyScreen(
                 Spacer(modifier = Modifier.height(30.dp))
 
                 // Listes des jours de la semaine
-                val daysOfWeek = listOf("Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche")
+                val daysOfWeek = listOf("Lu", "Ma", "Me", "Je", "Ve", "Sa", "Di")
                 val selectedDays = viewModel.daily.value.recurringDays?.split(",")?.map { it.trim() } ?: emptyList()
                 val selectedDaysSet = selectedDays.toSet()
-                val selectedDaysString = selectedDays.joinToString(", ")
 
                 Text(
                     text = "Jours de la semaine",
@@ -462,18 +461,32 @@ fun AddEditDailyScreen(
                     fontFamily = MaterialTheme.typography.headlineMedium.fontFamily
                 )
 
-                // Section "Notification"
-                Text(
-                    text = "Notification",
-                    fontSize = 20.sp,
-                    modifier = Modifier.padding(start = 16.dp),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        color = Color.White
-                            .copy(alpha = 0.8f)
-                    ),
-                    fontWeight = MaterialTheme.typography.headlineMedium.fontWeight,
-                    fontFamily = MaterialTheme.typography.headlineMedium.fontFamily
-                )
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(daysOfWeek.size) { index ->
+                        val day = daysOfWeek[index]
+                        FilterChip(
+                            onClick = {
+                                viewModel.onEvent(AddEditDailyEvent.RecurringDaysChanged(day))
+                            },
+                            label = { Text(day) },
+                            selected = selectedDaysSet.contains(day),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFF99A4BE),
+                                selectedLabelColor = Color.White,
+                                disabledContainerColor = Color.LightGray,
+                                disabledLabelColor = Color.Black,
+                                containerColor = Color.LightGray,
+                                labelColor = Color.Black,
+                            ),
+                        )
+                    }
+                }
+
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 val options = listOf(15, 30, 60, 120, 1440) // 15min, 30min, 1h, 2h, 1 jour
                 val optionLabels = listOf("15 min", "30 min", "1 heure", "2 heures", "1 jour")
@@ -529,59 +542,6 @@ fun AddEditDailyScreen(
                 }
                 // Après la section "Done"
                 Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = viewModel.daily.value.isRecurring,
-                        onCheckedChange = {
-                            viewModel.onEvent(AddEditDailyEvent.DailyRecurringChanged(it))
-                        },
-                        modifier = Modifier.align(Alignment.CenterVertically),
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = Color(0xFF99A4BE),
-                            uncheckedColor = Color(0xFF99A4BE)
-                        )
-                    )
-                    Text(
-                        text = "Répétition",
-                        fontSize = 20.sp,
-                        modifier = Modifier.align(Alignment.CenterVertically),
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            color = Color.White.copy(alpha = 0.8f)
-                        ),
-                        fontWeight = MaterialTheme.typography.headlineMedium.fontWeight,
-                        fontFamily = MaterialTheme.typography.headlineMedium.fontFamily
-                    )
-                }
-
-                // Afficher les options de récurrence si isRecurring est true
-                AnimatedVisibility(visible = viewModel.daily.value.isRecurring) {
-                    Column(modifier = Modifier.padding(start = 32.dp, top = 8.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            FilterChip(
-                                onClick = { viewModel.onEvent(AddEditDailyEvent.RecurringTypeSelected("daily")) },
-                                label = { Text("Daily") },
-                                selected = viewModel.daily.value.recurringType == "daily",
-                            )
-                            FilterChip(
-                                onClick = { viewModel.onEvent(AddEditDailyEvent.RecurringTypeSelected("weekly")) },
-                                label = { Text("Weekly") },
-                                selected = viewModel.daily.value.recurringType == "weekly",
-                            )
-                            FilterChip(
-                                onClick = { viewModel.onEvent(AddEditDailyEvent.RecurringTypeSelected("monthly")) },
-                                label = { Text("Monthly") },
-                                selected = viewModel.daily.value.recurringType == "monthly",
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
