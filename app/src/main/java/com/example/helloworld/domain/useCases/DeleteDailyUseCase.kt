@@ -6,8 +6,11 @@ import com.example.helloworld.utils.DailyException
 
 class DeleteDailyUseCase(private val dailiesDao: DailiesDao) {
     @Throws(DailyException::class)
-    suspend operator fun invoke(daily: Daily): Boolean {
+    suspend operator fun invoke(daily: Daily?): Boolean {
         return try {
+            if (daily == null) {
+                throw DailyException("Cannot delete a null Daily object", NullPointerException())
+            }
             val rowsDeleted = dailiesDao.deleteDaily(daily)
             rowsDeleted > 0
         } catch (e: Exception) {
