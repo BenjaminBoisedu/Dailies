@@ -6,7 +6,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.helloworld.domain.model.Story
 
-@Database(entities = [Story::class], version = 5, exportSchema = false)
+@Database(entities = [Story::class], version = 6, exportSchema = false)
 abstract class StoriesDatabase : RoomDatabase() {
     abstract val dao: StoriesDao
 
@@ -58,9 +58,9 @@ abstract class StoriesDatabase : RoomDatabase() {
 
         val MIGRATION_5_6 = object : Migration(5, 6) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE stories ADD COLUMN notificationTime INTEGER NOT NULL DEFAULT 30")
+                // Add the notificationTime column with default value "30"
+                db.execSQL("ALTER TABLE stories ADD COLUMN notificationTime TEXT NOT NULL DEFAULT '30'")
             }
         }
-
     }
 }

@@ -39,7 +39,6 @@ class NotificationWorker(
                 StoriesDatabase.MIGRATION_3_5,
                 StoriesDatabase.MIGRATION_5_6
             )
-            .fallbackToDestructiveMigration()
             .build()
     }
 
@@ -57,10 +56,19 @@ class NotificationWorker(
                 try {
                     // Parse the story date and time
                     val storyDateTime = getDateTimeFromStory(story)
+                    val storyDate = LocalDate.parse(story.date, DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.getDefault()))
+                    val currentDate = LocalDate.now()
+                    // Check if the story date is today
+                    if (storyDate != currentDate) {
+                        return@filter false
+                    }
+                    // Check if the story is already done
+                    if (story.done) {
+                        return@filter false
+                    }
 
-                    // Calculate when the notification should be shown based on notificationTime preference
-                    val notificationTimeMillis = storyDateTime - (story.notificationTime * 60 * 1000L)
-
+                    val notificationTimeMinutes = story.notificationTime.toIntOrNull() ?: 30
+                    val notificationTimeMillis = storyDateTime - (notificationTimeMinutes * 60 * 1000L)
                     // Check if now is the time to notify (within a 15-minute window to account for worker execution interval)
                     val shouldNotify = currentTimeMillis >= notificationTimeMillis &&
                             currentTimeMillis <= notificationTimeMillis + (15 * 60 * 1000)
@@ -129,11 +137,11 @@ class NotificationWorker(
 
             // Personnaliser le texte en fonction du délai de notification
             val timeDesc = when(story.notificationTime) {
-                15 -> "15 minutes"
-                30 -> "30 minutes"
-                60 -> "1 heure"
-                120 -> "2 heures"
-                1440 -> "1 jour"
+                "15" -> "15 minutes"
+                "30" -> "30 minutes"
+                "60" -> "1 heure"
+                "120" -> "2 heures"
+                "1440" -> "1 jour"
                 else -> "${story.notificationTime} minutes"
             }
 

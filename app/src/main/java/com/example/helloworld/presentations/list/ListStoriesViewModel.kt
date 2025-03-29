@@ -79,7 +79,7 @@ data class StoryVM(
     val isRecurring: Boolean = false,
     val recurringType: String = "", // "daily", "weekly", "monthly"
     val recurringInterval: Int = 0, // 0 for daily, 1 for weekly, 2 for monthly
-    val notificationTime: Int = 30 // Default 30 minutes before
+    val notificationTime: String = "30" // Default 30 minutes before
 
 ){
     companion object {

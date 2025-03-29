@@ -16,6 +16,6 @@ sealed interface AddEditStoryEvent {
     data class StoryRecurringChanged(val isRecurring: Boolean) : AddEditStoryEvent
     data class RecurringTypeSelected(val type: String) : AddEditStoryEvent
     data class RecurringIntervalChanged(val interval: Int) : AddEditStoryEvent
-    class NotificationTimeSelected(val time: Int) : AddEditStoryEvent
+    class NotificationTimeSelected(val time: String) : AddEditStoryEvent
     data class LocationSelected(val latitude: Double, val longitude: Double, val locationName: String) : AddEditStoryEvent
 }

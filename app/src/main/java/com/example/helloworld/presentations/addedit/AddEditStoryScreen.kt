@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -65,15 +66,12 @@ import com.example.helloworld.presentations.StandardPriority
 import com.example.helloworld.presentations.navigation.Screen
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableChipColors
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -428,23 +426,46 @@ fun AddEditStoryScreen(
                     }
                     Spacer(modifier = Modifier.height(30.dp))
 
-                    val options = listOf(15, 30, 60, 120, 1440) // Minutes (15min, 30min, 1h, 2h, 1day)
-                    val optionLabels = listOf("15 min", "30 min", "1 hour", "2 hours", "1 day")
+                    val options = listOf(15, 30, 60, 120, 1440) // 15min, 30min, 1h, 2h, 1 jour
+                    val optionLabels = listOf("15 min", "30 min", "1 heure", "2 heures", "1 jour")
 
-                    Column {
-                        Text("Notification time")
-                        LazyRow {
+                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                        Text(
+                            text = "Quand recevoir la notification:",
+                            style = MaterialTheme.typography.labelLarge
+                        )
+
+                        LazyRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             items(options.size) { index ->
                                 val selectedTime = viewModel.story.value.notificationTime
-                                val isSelected = selectedTime == options[index]
-                                RadioButton(
-                                    selected = isSelected,
-                                    onClick = {
-                                        viewModel.onEvent(AddEditStoryEvent.NotificationTimeSelected(options[index]))
-                                    },
-                                )
-                                Text(optionLabels[index])
-                                Spacer(Modifier.width(8.dp))
+                                val optionLabel = optionLabels[index]
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(
+                                            if (selectedTime == options[index].toString())
+                                                Color(0xFF99A4BE)
+                                            else
+                                                Color.LightGray
+                                        )
+                                        .clickable {
+                                            viewModel.onEvent(AddEditStoryEvent.NotificationTimeSelected(optionLabel))
+                                        }
+                                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                                ) {
+                                    Text(
+                                        text = optionLabels[index],
+                                        color = if (selectedTime == options[index].toString())
+                                            Color.White
+                                        else
+                                            Color.Black,
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                }
                             }
                         }
                     }
