@@ -35,12 +35,12 @@ class AddEditDailyViewModel @Inject constructor(
             viewModelScope.launch {
                 dailiesUseCases.editDaily.getDaily(dailyId).collect { daily ->
                     _daily.value = DailyVM(
-                        id = daily.id ?: -1, // Conversion en Int? nullable
+                        id = daily.id ?: -1,
                         title = daily.title,
                         description = daily.description,
                         date = daily.date,
                         time = daily.time,
-                        priority = daily.priority.toPriorityType(), // Conversion en PriorityType?
+                        priority = daily.priority.toPriorityType(),
                         done = daily.done
                     )
                 }
@@ -78,7 +78,7 @@ class AddEditDailyViewModel @Inject constructor(
                         return@launch
                     }
 
-                    daily.value.toEntity()?.let { entity ->
+                    daily.value.toEntity().let { entity ->
                         withContext(Dispatchers.IO) {
                             if (entity.id != null) {
                                 dailiesUseCases.editDaily.updateDaily(entity)
