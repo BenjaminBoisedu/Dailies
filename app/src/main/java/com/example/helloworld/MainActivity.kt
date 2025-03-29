@@ -39,8 +39,11 @@ class MainActivity : ComponentActivity() {
                 StoriesDatabase.MIGRATION_1_2,
                 StoriesDatabase.MIGRATION_2_3,
                 StoriesDatabase.MIGRATION_3_4,
+                StoriesDatabase.MIGRATION_4_5,
                 StoriesDatabase.MIGRATION_3_5,
+                StoriesDatabase.MIGRATION_5_6
             )
+            .fallbackToDestructiveMigration()
             .build()
     }
 

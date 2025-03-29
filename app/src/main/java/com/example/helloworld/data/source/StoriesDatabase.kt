@@ -16,61 +16,51 @@ abstract class StoriesDatabase : RoomDatabase() {
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE stories ADD COLUMN priority INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE stories ADD COLUMN latitude REAL")
+                db.execSQL("ALTER TABLE stories ADD COLUMN longitude REAL")
+                db.execSQL("ALTER TABLE stories ADD COLUMN locationName TEXT")
+                db.execSQL("ALTER TABLE stories ADD COLUMN recurringType TEXT")
+                db.execSQL("ALTER TABLE stories ADD COLUMN recurringInterval INTEGER")
+                db.execSQL("ALTER TABLE stories ADD COLUMN isRecurring INTEGER NOT NULL DEFAULT 0")
             }
         }
 
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE stories ADD COLUMN latitude REAL")
-                db.execSQL("ALTER TABLE stories ADD COLUMN longitude REAL")
-                db.execSQL("ALTER TABLE stories ADD COLUMN locationName TEXT")
+                db.execSQL("ALTER TABLE stories ADD COLUMN recurringType TEXT")
+                db.execSQL("ALTER TABLE stories ADD COLUMN recurringInterval INTEGER")
+                db.execSQL("ALTER TABLE stories ADD COLUMN isRecurring INTEGER NOT NULL DEFAULT 0")
             }
         }
-
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE stories ADD COLUMN recurringType TEXT")
                 db.execSQL("ALTER TABLE stories ADD COLUMN recurringInterval INTEGER")
+                db.execSQL("ALTER TABLE stories ADD COLUMN isRecurring INTEGER NOT NULL DEFAULT 0")
             }
         }
-
         val MIGRATION_3_5 = object : Migration(3, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Create a temporary table with the correct schema
-                db.execSQL("""
-                    CREATE TABLE IF NOT EXISTS stories_new (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        title TEXT NOT NULL,
-                        description TEXT NOT NULL,
-                        date TEXT NOT NULL,
-                        time TEXT NOT NULL,
-                        done INTEGER NOT NULL,
-                        priority INTEGER NOT NULL,
-                        latitude REAL,
-                        longitude REAL,
-                        locationName TEXT,
-                        recurringType TEXT NOT NULL DEFAULT '',
-                        recurringInterval INTEGER NOT NULL DEFAULT 0,
-                        isRecurring INTEGER NOT NULL DEFAULT 0
-                    )
-                """)
-
-                // Copy data from old table to new table
-                db.execSQL("""
-                    INSERT INTO stories_new (
-                        id, title, description, date, time, done, priority,
-                        latitude, longitude, locationName
-                    )
-                    SELECT
-                        id, title, description, date, time, done, priority,
-                        latitude, longitude, locationName
-                    FROM stories
-                """)
-
-                // Replace tables
-                db.execSQL("DROP TABLE stories")
-                db.execSQL("ALTER TABLE stories_new RENAME TO stories")
+                // For migrating from v3 to v5, we need to add the recurring columns if they don't exist
+                db.execSQL("ALTER TABLE stories ADD COLUMN recurringType TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE stories ADD COLUMN recurringInterval INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE stories ADD COLUMN isRecurring INTEGER NOT NULL DEFAULT 0")
             }
         }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE stories ADD COLUMN recurringType TEXT")
+                db.execSQL("ALTER TABLE stories ADD COLUMN recurringInterval INTEGER")
+                db.execSQL("ALTER TABLE stories ADD COLUMN isRecurring INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE stories ADD COLUMN notificationTime INTEGER NOT NULL DEFAULT 30")
+            }
+        }
+
     }
 }

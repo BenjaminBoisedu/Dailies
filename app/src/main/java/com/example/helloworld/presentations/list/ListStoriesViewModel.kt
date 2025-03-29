@@ -78,10 +78,10 @@ data class StoryVM(
     val locationName: String? = null,
     val isRecurring: Boolean = false,
     val recurringType: String = "", // "daily", "weekly", "monthly"
-    val recurringInterval: Int = 0 // 0 for daily, 1 for weekly, 2 for monthly
+    val recurringInterval: Int = 0, // 0 for daily, 1 for weekly, 2 for monthly
+    val notificationTime: Int = 30 // Default 30 minutes before
 
 ){
-
     companion object {
         fun fromEntity(entity: Story): StoryVM {
             return StoryVM(
@@ -91,7 +91,14 @@ data class StoryVM(
                 done = entity.done,
                 priority = PriorityType.fromInt(entity.priority),
                 date = entity.date,
-                time = entity.time
+                time = entity.time,
+                latitude = entity.latitude,
+                longitude = entity.longitude,
+                locationName = entity.locationName,
+                isRecurring = entity.isRecurring,
+                recurringType = entity.recurringType,
+                recurringInterval = entity.recurringInterval,
+                notificationTime = entity.notificationTime
             )
         }
     }
@@ -108,7 +115,15 @@ fun StoryVM.toEntity() : Story? {
                 done = this.done,
                 priority = it1.toInt(),
                 date = this.date,
-                time = this.time
+                time = this.time,
+                latitude = this.latitude,
+                longitude = this.longitude,
+                locationName = this.locationName,
+                recurringType = this.recurringType,
+                recurringInterval = this.recurringInterval,
+                isRecurring = this.isRecurring,
+                notificationTime = this.notificationTime
+
             )
         }
     }

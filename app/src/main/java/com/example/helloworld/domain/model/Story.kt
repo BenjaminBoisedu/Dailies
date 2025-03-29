@@ -18,5 +18,7 @@ data class Story(
     val locationName: String? = null,
     val recurringType: String = "",
     val recurringInterval: Int = 0,
-    val isRecurring: Boolean = false
+    val isRecurring: Boolean = false,
+    val notificationTime: Int = 30 // Default 30 minutes before
+
 )

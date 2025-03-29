@@ -101,6 +101,11 @@ class AddEditStoryViewModel @Inject constructor(
             is AddEditStoryEvent.RecurringIntervalChanged -> {
                 _story.value = _story.value.copy(recurringInterval = event.interval)
             }
+
+            is AddEditStoryEvent.LocationSelected -> TODO()
+            is AddEditStoryEvent.NotificationTimeSelected -> {
+                _story.value = _story.value.copy(notificationTime = event.time)
+            }
         }
     }
 }

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -64,6 +65,7 @@ import com.example.helloworld.presentations.StandardPriority
 import com.example.helloworld.presentations.navigation.Screen
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableChipColors
 import androidx.compose.material3.Snackbar
@@ -425,6 +427,27 @@ fun AddEditStoryScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(30.dp))
+
+                    val options = listOf(15, 30, 60, 120, 1440) // Minutes (15min, 30min, 1h, 2h, 1day)
+                    val optionLabels = listOf("15 min", "30 min", "1 hour", "2 hours", "1 day")
+
+                    Column {
+                        Text("Notification time")
+                        LazyRow {
+                            items(options.size) { index ->
+                                val selectedTime = viewModel.story.value.notificationTime
+                                val isSelected = selectedTime == options[index]
+                                RadioButton(
+                                    selected = isSelected,
+                                    onClick = {
+                                        viewModel.onEvent(AddEditStoryEvent.NotificationTimeSelected(options[index]))
+                                    },
+                                )
+                                Text(optionLabels[index])
+                                Spacer(Modifier.width(8.dp))
+                            }
+                        }
+                    }
                     // Après la section "Done"
                     Spacer(modifier = Modifier.height(16.dp))
                     Row(

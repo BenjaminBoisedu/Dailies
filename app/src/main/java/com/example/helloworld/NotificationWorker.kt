@@ -35,42 +35,51 @@ class NotificationWorker(
                 StoriesDatabase.MIGRATION_1_2,
                 StoriesDatabase.MIGRATION_2_3,
                 StoriesDatabase.MIGRATION_3_4,
+                StoriesDatabase.MIGRATION_4_5,
                 StoriesDatabase.MIGRATION_3_5,
+                StoriesDatabase.MIGRATION_5_6
             )
+            .fallbackToDestructiveMigration()
             .build()
     }
 
     override suspend fun doWork(): Result {
         Log.d("NotificationWorker", "Worker started")
-        val today = LocalDate.now()
-        val dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.getDefault())
+        val currentTimeMillis = System.currentTimeMillis()
 
         try {
             // Get stories directly from the database
             val stories = db.dao.getStories().first()
             Log.d("NotificationWorker", "Retrieved ${stories.size} stories from database")
 
-
-            // Filter for upcoming stories
-            val upcomingStories = stories.filter { story ->
+            // Filter for stories that should trigger notifications now
+            val storiesToNotify = stories.filter { story ->
                 try {
-                    val storyDate = LocalDate.parse(story.date, dateFormat)
-                    val isUpcoming = isWithinNextDays(today, storyDate, 3)
-                    Log.d("NotificationWorker", "Story ${story.title} date=${story.date} isUpcoming=$isUpcoming")
-                    isUpcoming
+                    // Parse the story date and time
+                    val storyDateTime = getDateTimeFromStory(story)
+
+                    // Calculate when the notification should be shown based on notificationTime preference
+                    val notificationTimeMillis = storyDateTime - (story.notificationTime * 60 * 1000L)
+
+                    // Check if now is the time to notify (within a 15-minute window to account for worker execution interval)
+                    val shouldNotify = currentTimeMillis >= notificationTimeMillis &&
+                            currentTimeMillis <= notificationTimeMillis + (15 * 60 * 1000)
+
+                    Log.d("NotificationWorker", "Story ${story.title} - Should notify: $shouldNotify")
+
+                    shouldNotify
                 } catch (e: Exception) {
-                    Log.e("NotificationWorker", "Error parsing date: ${story.date}", e)
+                    Log.e("NotificationWorker", "Error processing story: ${story.title}", e)
                     false
                 }
             }
 
-            Log.d("NotificationWorker", "Found ${upcomingStories.size} upcoming stories")
+            Log.d("NotificationWorker", "Found ${storiesToNotify.size} stories to notify about")
 
-
-            if (upcomingStories.isNotEmpty()) {
-                sendNotifications(upcomingStories)
+            if (storiesToNotify.isNotEmpty()) {
+                sendNotifications(storiesToNotify)
             } else {
-                Log.d("NotificationWorker", "No upcoming stories to notify about")
+                Log.d("NotificationWorker", "No stories to notify about right now")
             }
 
             return Result.success()
@@ -80,9 +89,11 @@ class NotificationWorker(
         }
     }
 
-    private fun isWithinNextDays(today: LocalDate, targetDate: LocalDate, days: Int): Boolean {
-        val futureDate = today.plusDays(days.toLong())
-        return !targetDate.isBefore(today) && !targetDate.isAfter(futureDate)
+    // Helper method to convert story date and time strings to timestamp
+    private fun getDateTimeFromStory(story: Story): Long {
+        val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
+        val localDateTime = java.time.LocalDateTime.parse("${story.date} ${story.time}", formatter)
+        return localDateTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
     private fun sendNotifications(stories: List<Story>) {
@@ -116,7 +127,17 @@ class NotificationWorker(
             val dateFormatted = story.date.split("-").joinToString("/")
             val timeFormatted = story.time.split(":").take(2).joinToString("h")
 
-            val contentText = "📝 Rappel : ${story.title} - ${dateFormatted} à ${timeFormatted}"
+            // Personnaliser le texte en fonction du délai de notification
+            val timeDesc = when(story.notificationTime) {
+                15 -> "15 minutes"
+                30 -> "30 minutes"
+                60 -> "1 heure"
+                120 -> "2 heures"
+                1440 -> "1 jour"
+                else -> "${story.notificationTime} minutes"
+            }
+
+            val contentText = "📝 Rappel: ${story.title} aura lieu dans $timeDesc - $dateFormatted à $timeFormatted"
 
             val notification = NotificationCompat.Builder(applicationContext, channelId)
                 .setSmallIcon(R.drawable.logo)
