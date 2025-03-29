@@ -86,15 +86,15 @@ import java.util.Locale
     "SuspiciousIndentation"
 )
 @Composable
-fun AddEditStoryScreen(
+fun AddEditDailyScreen(
     navController: NavController,
-    viewModel: AddEditStoryViewModel = hiltViewModel()
+    viewModel: AddEditDailyViewModel = hiltViewModel()
 ) {
     val listPriority = mapOf(
         StandardPriority to "Standard",
         HighPriority to "High"
     )
-    var selectedPriority by remember { mutableStateOf(viewModel.story.value.priority) }
+    var selectedPriority by remember { mutableStateOf(viewModel.daily.value.priority) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
@@ -103,10 +103,10 @@ fun AddEditStoryScreen(
     LaunchedEffect(true) {
         viewModel.eventFlow.collectLatest { event ->
             when (event) {
-                is AddEditStoryUiEvent.SavedStory -> {
-                    navController.navigate(Screen.StoriesListScreen.route)
+                is AddEditDailyUiEvent.SavedDaily -> {
+                    navController.navigate(Screen.DailiesListScreen.route)
                 }
-                is AddEditStoryUiEvent.ShowMessage -> {
+                is AddEditDailyUiEvent.ShowMessage -> {
                     snackbarHostState.showSnackbar(event.message)
                 }
             }
@@ -120,10 +120,10 @@ fun AddEditStoryScreen(
             LaunchedEffect(true) {
                 viewModel.eventFlow.collectLatest { event ->
                     when (event) {
-                        is AddEditStoryUiEvent.SavedStory -> {
-                            navController.navigate(Screen.StoriesListScreen.route)
+                        is AddEditDailyUiEvent.SavedDaily -> {
+                            navController.navigate(Screen.DailiesListScreen.route)
                         }
-                        is AddEditStoryUiEvent.ShowMessage -> {
+                        is AddEditDailyUiEvent.ShowMessage -> {
                             snackbarHostState.showSnackbar(event.message)
                         }
                     }
@@ -139,7 +139,7 @@ fun AddEditStoryScreen(
             ) {
                 FloatingActionButton(
                     onClick = {
-                        navController.navigate(Screen.StoriesListScreen.route)
+                        navController.navigate(Screen.DailiesListScreen.route)
                     },
                     modifier = Modifier
                         .padding(8.dp)
@@ -172,12 +172,12 @@ fun AddEditStoryScreen(
                 contentPadding = PaddingValues(10.dp)
             ) {
                 item{
-                    val story = viewModel.story.value
+                    val daily = viewModel.daily.value
                     OutlinedTextField(
-                        value = story.title,
+                        value = daily.title,
                         placeholder = { Text("Title") },
                         onValueChange = {
-                            viewModel.onEvent(AddEditStoryEvent.EnteredTitle(it))
+                            viewModel.onEvent(AddEditDailyEvent.EnteredTitle(it))
                         },
                         modifier = Modifier.fillMaxWidth()
                             .border(3.dp, Color.White, Shapes().medium),
@@ -190,10 +190,10 @@ fun AddEditStoryScreen(
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
-                    story.description?.let { it ->
+                    daily.description?.let { it ->
                         OutlinedTextField(
                             value  = it,
-                            onValueChange = { viewModel.onEvent(AddEditStoryEvent.EnteredDescription(it)) },
+                            onValueChange = { viewModel.onEvent(AddEditDailyEvent.EnteredDescription(it)) },
                             placeholder = { Text("Description") },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -241,13 +241,13 @@ fun AddEditStoryScreen(
                             listPriority.forEach { priority ->
                             FilterChip(
                                 onClick = { selectedPriority = priority.key
-                                    viewModel.onEvent(AddEditStoryEvent.PrioritySelected(priority.key)) },
+                                    viewModel.onEvent(AddEditDailyEvent.PrioritySelected(priority.key)) },
                                 label = {
                                     Text(
                                         text = priority.value,
                                         style = TextStyle(
                                             fontSize = 16.sp,
-                                            color = story.priority?.foregroundColor ?: Color.Black,
+                                            color = daily.priority?.foregroundColor ?: Color.Black,
                                         ),
                                         modifier = Modifier.padding(8.dp)
                                     )
@@ -296,8 +296,8 @@ fun AddEditStoryScreen(
                     ) {
 
                         var showDatePicker by remember { mutableStateOf(false) }
-                        var selectedDate by remember(viewModel.story.value.date) {
-                            mutableStateOf(viewModel.story.value.date)
+                        var selectedDate by remember(viewModel.daily.value.date) {
+                            mutableStateOf(viewModel.daily.value.date)
                         }
 
                         if (showDatePicker) {
@@ -318,7 +318,7 @@ fun AddEditStoryScreen(
                                             val newDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
                                                 .format(calendar.time)
                                             selectedDate = newDate
-                                            viewModel.onEvent(AddEditStoryEvent.DateSelected(newDate))
+                                            viewModel.onEvent(AddEditDailyEvent.DateSelected(newDate))
                                         }
                                             showDatePicker = false
                                     }) {
@@ -362,17 +362,17 @@ fun AddEditStoryScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
                         // Time field
-                        val storyTime = story.time
-                        val storyTimeMinutes = storyTime.substringAfter(":").toIntOrNull() ?: 0
-                        val storyTimeHours = storyTime.substringBefore(":").toIntOrNull() ?: 0
+                        val dailyTime = daily.time
+                        val dailyTimeMinutes = dailyTime.substringAfter(":").toIntOrNull() ?: 0
+                        val dailyTimeHours = dailyTime.substringBefore(":").toIntOrNull() ?: 0
                         var showTimePicker by remember { mutableStateOf(false) }
-                        var selectedTime by remember(viewModel.story.value.time) {
-                            mutableStateOf(viewModel.story.value.time)
+                        var selectedTime by remember(viewModel.daily.value.time) {
+                            mutableStateOf(viewModel.daily.value.time)
                         }
                         if (showTimePicker) {
                             val timePickerState = rememberTimePickerState(
-                                initialHour = storyTimeHours,
-                                initialMinute = storyTimeMinutes,
+                                initialHour = dailyTimeHours,
+                                initialMinute = dailyTimeMinutes,
                                 is24Hour = true
                             )
 
@@ -383,7 +383,7 @@ fun AddEditStoryScreen(
                                         val hour = timePickerState.hour.toString().padStart(2, '0')
                                         val minute = timePickerState.minute.toString().padStart(2, '0')
                                         selectedTime = "$hour:$minute"
-                                        viewModel.onEvent(AddEditStoryEvent.TimeSelected(selectedTime))
+                                        viewModel.onEvent(AddEditDailyEvent.TimeSelected(selectedTime))
                                         showTimePicker = false
                                     }) {
                                         Text("OK")
@@ -439,7 +439,7 @@ fun AddEditStoryScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(options.size) { index ->
-                                val selectedTime = viewModel.story.value.notificationTime
+                                val selectedTime = viewModel.daily.value.notificationTime
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier
@@ -451,7 +451,7 @@ fun AddEditStoryScreen(
                                                 Color.LightGray
                                         )
                                         .clickable {
-                                            viewModel.onEvent(AddEditStoryEvent.NotificationTimeSelected(options[index].toString()))
+                                            viewModel.onEvent(AddEditDailyEvent.NotificationTimeSelected(options[index].toString()))
                                         }
                                         .padding(horizontal = 12.dp, vertical = 8.dp)
                                 ) {
@@ -484,9 +484,9 @@ fun AddEditStoryScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
-                            checked = viewModel.story.value.isRecurring,
+                            checked = viewModel.daily.value.isRecurring,
                             onCheckedChange = {
-                                viewModel.onEvent(AddEditStoryEvent.StoryRecurringChanged(it))
+                                viewModel.onEvent(AddEditDailyEvent.DailyRecurringChanged(it))
                             },
                             modifier = Modifier.align(Alignment.CenterVertically),
                             colors = CheckboxDefaults.colors(
@@ -507,26 +507,26 @@ fun AddEditStoryScreen(
                     }
 
                     // Afficher les options de récurrence si isRecurring est true
-                    AnimatedVisibility(visible = viewModel.story.value.isRecurring) {
+                    AnimatedVisibility(visible = viewModel.daily.value.isRecurring) {
                         Column(modifier = Modifier.padding(start = 32.dp, top = 8.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 FilterChip(
-                                    onClick = { viewModel.onEvent(AddEditStoryEvent.RecurringTypeSelected("daily")) },
+                                    onClick = { viewModel.onEvent(AddEditDailyEvent.RecurringTypeSelected("daily")) },
                                     label = { Text("Daily") },
-                                    selected = viewModel.story.value.recurringType == "daily",
+                                    selected = viewModel.daily.value.recurringType == "daily",
                                 )
                                 FilterChip(
-                                    onClick = { viewModel.onEvent(AddEditStoryEvent.RecurringTypeSelected("weekly")) },
+                                    onClick = { viewModel.onEvent(AddEditDailyEvent.RecurringTypeSelected("weekly")) },
                                     label = { Text("Weekly") },
-                                    selected = viewModel.story.value.recurringType == "weekly",
+                                    selected = viewModel.daily.value.recurringType == "weekly",
                                 )
                                 FilterChip(
-                                    onClick = { viewModel.onEvent(AddEditStoryEvent.RecurringTypeSelected("monthly")) },
+                                    onClick = { viewModel.onEvent(AddEditDailyEvent.RecurringTypeSelected("monthly")) },
                                     label = { Text("Monthly") },
-                                    selected = viewModel.story.value.recurringType == "monthly",
+                                    selected = viewModel.daily.value.recurringType == "monthly",
                                 )
                             }
 
@@ -535,8 +535,8 @@ fun AddEditStoryScreen(
                             // Sélecteur d'intervalle
                             var intervalText by remember {
                                 mutableStateOf(
-                                    if (viewModel.story.value.recurringInterval > 0)
-                                        viewModel.story.value.recurringInterval.toString()
+                                    if (viewModel.daily.value.recurringInterval > 0)
+                                        viewModel.daily.value.recurringInterval.toString()
                                     else ""
                                 )
                             }
@@ -546,7 +546,7 @@ fun AddEditStoryScreen(
                                 onValueChange = {
                                     intervalText = it.filter { char -> char.isDigit() }
                                     val interval = intervalText.toIntOrNull() ?: 0
-                                    viewModel.onEvent(AddEditStoryEvent.RecurringIntervalChanged(interval))
+                                    viewModel.onEvent(AddEditDailyEvent.RecurringIntervalChanged(interval))
                                 },
                                 label = { Text("Repeat every (interval)") },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -564,9 +564,9 @@ fun AddEditStoryScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
-                            checked = viewModel.story.value.done,
+                            checked = viewModel.daily.value.done,
                             onCheckedChange = {
-                                viewModel.onEvent(AddEditStoryEvent.StoryDone)
+                                viewModel.onEvent(AddEditDailyEvent.DailyDone)
                             },
                             modifier = Modifier.align(Alignment.CenterVertically),
                             colors = CheckboxDefaults.colors(
@@ -589,10 +589,10 @@ fun AddEditStoryScreen(
                         LaunchedEffect(true) {
                             viewModel.eventFlow.collectLatest { event ->
                                 when (event) {
-                                    is AddEditStoryUiEvent.SavedStory -> {
-                                        navController.navigate(Screen.StoriesListScreen.route)
+                                    is AddEditDailyUiEvent.SavedDaily -> {
+                                        navController.navigate(Screen.DailiesListScreen.route)
                                     }
-                                    is AddEditStoryUiEvent.ShowMessage -> {
+                                    is AddEditDailyUiEvent.ShowMessage -> {
                                         snackbarHostState.showSnackbar(event.message)
                                     }
                                 }
@@ -601,24 +601,24 @@ fun AddEditStoryScreen(
                             Button(
                                 onClick = {
                                     when {
-                                        viewModel.story.value.title.isBlank() -> {
-                                            viewModel.onEvent(AddEditStoryEvent.SaveStory) // This will trigger ShowMessage event
+                                        viewModel.daily.value.title.isBlank() -> {
+                                            viewModel.onEvent(AddEditDailyEvent.SaveDaily) // This will trigger ShowMessage event
                                         }
-                                        viewModel.story.value.description?.isBlank() != false -> {
-                                            viewModel.onEvent(AddEditStoryEvent.SaveStory) // This will trigger ShowMessage event
+                                        viewModel.daily.value.description?.isBlank() != false -> {
+                                            viewModel.onEvent(AddEditDailyEvent.SaveDaily) // This will trigger ShowMessage event
                                         }
-                                        viewModel.story.value.date.isBlank() -> {
-                                            viewModel.onEvent(AddEditStoryEvent.SaveStory) // This will trigger ShowMessage event
+                                        viewModel.daily.value.date.isBlank() -> {
+                                            viewModel.onEvent(AddEditDailyEvent.SaveDaily) // This will trigger ShowMessage event
                                         }
-                                        viewModel.story.value.time.isBlank() -> {
-                                            viewModel.onEvent(AddEditStoryEvent.SaveStory) // This will trigger ShowMessage event
+                                        viewModel.daily.value.time.isBlank() -> {
+                                            viewModel.onEvent(AddEditDailyEvent.SaveDaily) // This will trigger ShowMessage event
                                         }
-                                        viewModel.story.value.priority == null -> {
-                                            viewModel.onEvent(AddEditStoryEvent.SaveStory) // This will trigger ShowMessage event
+                                        viewModel.daily.value.priority == null -> {
+                                            viewModel.onEvent(AddEditDailyEvent.SaveDaily) // This will trigger ShowMessage event
                                         }
                                         else -> {
-                                            viewModel.onEvent(AddEditStoryEvent.SaveStory)
-                                            navController.navigate(Screen.StoriesListScreen.route)
+                                            viewModel.onEvent(AddEditDailyEvent.SaveDaily)
+                                            navController.navigate(Screen.DailiesListScreen.route)
                                         }
                                     }
                                 },

@@ -5,10 +5,9 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.helloworld.domain.model.Story
-import com.example.helloworld.domain.useCases.StoriesUseCases
+import com.example.helloworld.domain.model.Daily
+import com.example.helloworld.domain.useCases.DailiesUseCases
 import com.example.helloworld.presentations.PriorityType
-import com.example.helloworld.utils.getStories
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
@@ -18,63 +17,63 @@ import javax.inject.Inject
 import kotlin.random.Random
 
 @HiltViewModel
-class ListStoriesViewModel @Inject constructor(
-    private val storiesUseCases: StoriesUseCases
+class ListDailiesViewModel @Inject constructor(
+    private val dailiesUseCases: DailiesUseCases
 ) : ViewModel() {
-    private val _stories: MutableState<List<StoryVM>> = mutableStateOf(emptyList())
-    var stories: State<List<StoryVM>> = _stories
+    private val _dailies: MutableState<List<DailyVM>> = mutableStateOf(emptyList())
+    var dailies: State<List<DailyVM>> = _dailies
     private var job: Job? = null
 
     init {
-       loadStories()
+       loadDailies()
     }
 
-    private fun loadStories() {
+    private fun loadDailies() {
         job?.cancel()
-        job = storiesUseCases.getStories().onEach { stories ->
-            _stories.value = stories.map { StoryVM.fromEntity(it) }
+        job = dailiesUseCases.getDailies().onEach { dailies ->
+            _dailies.value = dailies.map { DailyVM.fromEntity(it) }
         }.launchIn(viewModelScope)
     }
 
-    fun onEvent(event: StoryEvent) {
+    fun onEvent(event: DailyEvent) {
         when(event) {
-            is StoryEvent.Delete ->
-            { deleteStory(event.story) }
+            is DailyEvent.Delete ->
+            { deleteDaily(event.daily) }
 
-            is StoryEvent.Edit ->
+            is DailyEvent.Edit ->
             {
-                _stories.value = _stories.value.map {
-                    if (it.id == event.story.id) {
-                        event.story
+                _dailies.value = _dailies.value.map {
+                    if (it.id == event.daily.id) {
+                        event.daily
                     } else {
                         it
                     }
                 }
-                saveStoryToDatabase(event.story)
+                saveDailyToDatabase(event.daily)
             }
-            is StoryEvent.Detail ->
-            { detailStory(event.story) }
+            is DailyEvent.Detail ->
+            { detailDaily(event.daily) }
 
         }
     }
-    private fun saveStoryToDatabase(story: StoryVM) {
-        story.toEntity()?.let { entity ->
+    private fun saveDailyToDatabase(daily: DailyVM) {
+        daily.toEntity()?.let { entity ->
             viewModelScope.launch {
-                storiesUseCases.upsertStory(entity)
+                dailiesUseCases.upsertDaily(entity)
             }
         }
     }
 
-    fun deleteStory(story: StoryVM) {
-        story.toEntity()?.let { entity ->
+    fun deleteDaily(daily: DailyVM) {
+        daily.toEntity()?.let { entity ->
             viewModelScope.launch {
                 try {
-                    val isDeleted = storiesUseCases.deleteStory(entity)
+                    val isDeleted = dailiesUseCases.deleteDaily(entity)
                     if (isDeleted) {
-                        // Manually update the state to remove the deleted story
-                        _stories.value = _stories.value.filter { it.id != story.id }
+                        // Manually update the state to remove the deleted daily
+                        _dailies.value = _dailies.value.filter { it.id != daily.id }
                     }
-                    // The Flow collection in loadStories() will also handle updating the list
+                    // The Flow collection in loadDailies() will also handle updating the list
                 } catch (e: Exception) {
                     // Handle error
                 }
@@ -83,12 +82,12 @@ class ListStoriesViewModel @Inject constructor(
     }
 
 
-    private fun detailStory(story: StoryVM) {
-        _stories.value = _stories.value.filter { it != story }
+    private fun detailDaily(daily: DailyVM) {
+        _dailies.value = _dailies.value.filter { it != daily }
     }
 }
 
-data class StoryVM(
+data class DailyVM(
     val id: Int = Random.nextInt(),
     val title: String = "",
     val description: String? = "",
@@ -106,8 +105,8 @@ data class StoryVM(
 
 ){
     companion object {
-        fun fromEntity(entity: Story): StoryVM {
-            return StoryVM(
+        fun fromEntity(entity: Daily): DailyVM {
+            return DailyVM(
                 id = entity.id!!,
                 title = entity.title,
                 description = entity.description,
@@ -127,27 +126,22 @@ data class StoryVM(
     }
 }
 
-fun StoryVM.toEntity() : Story? {
+fun DailyVM.toEntity(): Daily {
     val id = if (this.id == -1) null else this.id
-    return this.description?.let {
-        priority?.let { it1 ->
-            Story(
-                id = id,
-                title = this.title,
-                description = it,
-                done = this.done,
-                priority = it1.toInt(),
-                date = this.date,
-                time = this.time,
-                latitude = this.latitude,
-                longitude = this.longitude,
-                locationName = this.locationName,
-                recurringType = this.recurringType,
-                recurringInterval = this.recurringInterval,
-                isRecurring = this.isRecurring,
-                notificationTime = this.notificationTime
-
-            )
-        }
-    }
+    return Daily(
+        id = id,
+        title = this.title,
+        description = this.description ?: "", // Valeur par défaut si null
+        done = this.done,
+        priority = this.priority?.toInt() ?: 0, // Valeur par défaut si null
+        date = this.date,
+        time = this.time,
+        latitude = this.latitude,
+        longitude = this.longitude,
+        locationName = this.locationName,
+        recurringType = this.recurringType,
+        recurringInterval = this.recurringInterval,
+        isRecurring = this.isRecurring,
+        notificationTime = this.notificationTime
+    )
 }

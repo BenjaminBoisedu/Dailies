@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.helloworld.R
-import com.example.helloworld.presentations.components.StoryCard
+import com.example.helloworld.presentations.components.DailyCard
 import com.example.helloworld.presentations.navigation.Screen
 import kotlinx.coroutines.launch
 
@@ -57,7 +57,7 @@ import kotlinx.coroutines.launch
     "SuspiciousIndentation"
 )
 @Composable
-fun ListStoriesScreen(navController: NavController, viewModel: ListStoriesViewModel  = hiltViewModel()) {
+fun ListDailiesScreen(navController: NavController, viewModel: ListDailiesViewModel  = hiltViewModel()) {
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -66,7 +66,7 @@ fun ListStoriesScreen(navController: NavController, viewModel: ListStoriesViewMo
             snackbarHost = { SnackbarHost(snackbarHostState) },
             floatingActionButton = {
                 FloatingActionButton(onClick = {
-                    navController.navigate(Screen.AddEditStoryScreen.route)
+                    navController.navigate(Screen.AddEditDailyScreen.route)
                 },
                     Modifier.padding(16.dp),
                     containerColor = Color(0xFF7684A7),
@@ -183,13 +183,13 @@ fun ListStoriesScreen(navController: NavController, viewModel: ListStoriesViewMo
                     horizontalAlignment = Alignment.CenterHorizontally,
                     contentPadding = PaddingValues(16.dp)
                 ) {
-                    items(viewModel.stories.value) { story ->
-                        StoryCard(story = story, onDeleteClick = {
-                            viewModel.onEvent(StoryEvent.Delete(story))
+                    items(viewModel.dailies.value) { daily ->
+                        DailyCard(daily = daily, onDeleteClick = {
+                            viewModel.onEvent(DailyEvent.Delete(daily))
                             scope.launch { snackbarHostState.showSnackbar("Routine supprimée")
                             }},
-                            onEditClick = { navController.navigate(Screen.AddEditStoryScreen.route + "?storyId=${story.id}") },
-                            onDetailClick = { navController.navigate(Screen.DetailStoryScreen.route)},
+                            onEditClick = { navController.navigate(Screen.AddEditDailyScreen.route + "?dailyId=${daily.id}") },
+                            onDetailClick = { navController.navigate(Screen.DetailDailyScreen.route)},
                         )
                     }
                 }

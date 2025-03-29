@@ -29,25 +29,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.helloworld.presentations.HighPriority
-import com.example.helloworld.presentations.list.ListStoriesViewModel
+import com.example.helloworld.presentations.list.ListDailiesViewModel
 import com.example.helloworld.presentations.navigation.Screen
 
 @SuppressLint("MutableCollectionMutableState")
 @Composable
-fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesViewModel) {
+fun DetailDailyScreen(navController: NavHostController, viewModel: ListDailiesViewModel) {
 
-    val story = viewModel.stories.value[0]
-    val storyTitle = story.title
-    val storyDate = story.date
-    val storyTime = story.time
-    val storyPriority = story.priority
-    val storyDone = story.done
+    val daily = viewModel.dailies.value[0]
+    val dailyTitle = daily.title
+    val dailyDate = daily.date
+    val dailyTime = daily.time
+    val dailyPriority = daily.priority
+    val dailyDone = daily.done
 
 
     Scaffold (
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                navController.navigate(Screen.AddEditStoryScreen.route)
+                navController.navigate(Screen.AddEditDailyScreen.route)
             },
                 Modifier.padding(16.dp))
             {
@@ -66,7 +66,7 @@ fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesVi
             ) {
                 FloatingActionButton(
                     onClick = {
-                        navController.navigate(Screen.StoriesListScreen.route)
+                        navController.navigate(Screen.DailiesListScreen.route)
                     },
                     modifier = Modifier
                         .padding(8.dp)
@@ -110,18 +110,18 @@ fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesVi
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = storyTitle,
+                        text = dailyTitle,
                         modifier = Modifier
                             .padding(8.dp)
                             .background(Color.Transparent),
                         style = TextStyle(
                             fontSize = 30.sp,
                             textAlign = TextAlign.Center,
-                            color = if (storyPriority == HighPriority) Color.Red else Color(0xFFFFA500)
+                            color = if (dailyPriority == HighPriority) Color.Red else Color(0xFFFFA500)
 
                         )
                     )
-                    if (storyPriority == HighPriority) {
+                    if (dailyPriority == HighPriority) {
                         Icon(
                             imageVector = Icons.Default.Warning,
                             contentDescription = "Haut Priorité",
@@ -149,7 +149,7 @@ fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesVi
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = storyDate,
+                        text = dailyDate,
                         modifier = Modifier
                             .padding(8.dp)
                             .background(Color.Transparent),
@@ -160,7 +160,7 @@ fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesVi
                         )
                     )
                     Text(
-                        text = storyTime,
+                        text = dailyTime,
                         modifier = Modifier
                             .padding(8.dp)
                             .background(Color.Transparent),
@@ -170,7 +170,7 @@ fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesVi
 
                         )
                     )
-                    if (storyDone) {
+                    if (dailyDone) {
                         Row (
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -190,8 +190,8 @@ fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesVi
                             )
                             IconButton(
                                 onClick = {
-                                    viewModel.deleteStory(story)
-                                    navController.navigate(Screen.StoriesListScreen.route)
+                                    viewModel.deleteDaily(daily)
+                                    navController.navigate(Screen.DailiesListScreen.route)
                                 },
                                 modifier = Modifier.padding(8.dp)
                             ) { }
@@ -216,7 +216,7 @@ fun DetailStoryScreen(navController: NavHostController, viewModel: ListStoriesVi
                             )
                             IconButton(
                                 onClick = {
-                                    navController.navigate(Screen.AddEditStoryScreen.route)
+                                    navController.navigate(Screen.AddEditDailyScreen.route)
                                 },
                                 modifier = Modifier
                                     .padding(8.dp)

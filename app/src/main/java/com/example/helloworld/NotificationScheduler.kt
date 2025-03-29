@@ -23,7 +23,7 @@ fun scheduleNotificationWorker(applicationContext: Context) {
         .build()
 
     WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
-        "story_notifications",
+        "daily_notifications",
         ExistingPeriodicWorkPolicy.UPDATE,
         repeatingRequest
     )

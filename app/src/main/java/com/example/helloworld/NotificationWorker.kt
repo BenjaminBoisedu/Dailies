@@ -13,8 +13,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.room.Room
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.example.helloworld.data.source.StoriesDatabase
-import com.example.helloworld.domain.model.Story
+import com.example.helloworld.data.source.DailiesDatabase
+import com.example.helloworld.domain.model.Daily
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -28,16 +28,16 @@ class NotificationWorker(
     private val db by lazy {
         Room.databaseBuilder(
             context.applicationContext,
-            StoriesDatabase::class.java,
-            StoriesDatabase.DATABASE_NAME
+            DailiesDatabase::class.java,
+            DailiesDatabase.DATABASE_NAME
         )
             .addMigrations(
-                StoriesDatabase.MIGRATION_1_2,
-                StoriesDatabase.MIGRATION_2_3,
-                StoriesDatabase.MIGRATION_3_4,
-                StoriesDatabase.MIGRATION_4_5,
-                StoriesDatabase.MIGRATION_3_5,
-                StoriesDatabase.MIGRATION_5_6
+                DailiesDatabase.MIGRATION_1_2,
+                DailiesDatabase.MIGRATION_2_3,
+                DailiesDatabase.MIGRATION_3_4,
+                DailiesDatabase.MIGRATION_4_5,
+                DailiesDatabase.MIGRATION_3_5,
+                DailiesDatabase.MIGRATION_5_6
             )
             .build()
     }
@@ -47,31 +47,31 @@ class NotificationWorker(
         val currentTimeMillis = System.currentTimeMillis()
 
         try {
-            // Get stories directly from the database
-            val stories = db.dao.getStories().first()
-            Log.d("NotificationWorker", "Retrieved ${stories.size} stories from database")
+            // Get dailies directly from the database
+            val dailies = db.dao.getDailies().first()
+            Log.d("NotificationWorker", "Retrieved ${dailies.size} dailies from database")
 
-            // Filter for stories that should trigger notifications now
-            val storiesToNotify = stories.filter { story ->
+            // Filter for dailies that should trigger notifications now
+            val dailiesToNotify = dailies.filter { daily ->
                 try {
-                    // Parse the story date and time
-                    val storyDateTime = getDateTimeFromStory(story)
-                    val storyDate = LocalDate.parse(story.date, DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.getDefault()))
+                    // Parse the daily date and time
+                    val dailyDateTime = getDateTimeFromDaily(daily)
+                    val dailyDate = LocalDate.parse(daily.date, DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.getDefault()))
                     val currentDate = LocalDate.now()
 
-                    // Check if the story date is today
-                    if (storyDate != currentDate) {
+                    // Check if the daily date is today
+                    if (dailyDate != currentDate) {
                         return@filter false
                     }
 
-                    // Check if the story is already done
-                    if (story.done) {
+                    // Check if the daily is already done
+                    if (daily.done) {
                         return@filter false
                     }
 
-                    val notificationTimeMinutes = story.notificationTime.toIntOrNull() ?: 30
-                    val storyTime = story.time.split(":")
-                    val hourMinute = storyTime[0].toInt() * 60 + storyTime[1].toInt()
+                    val notificationTimeMinutes = daily.notificationTime.toIntOrNull() ?: 30
+                    val dailyTime = daily.time.split(":")
+                    val hourMinute = dailyTime[0].toInt() * 60 + dailyTime[1].toInt()
 
                     // Calculate the exact notification time in minutes of the day
                     val notificationMinuteOfDay = hourMinute - notificationTimeMinutes
@@ -87,33 +87,33 @@ class NotificationWorker(
                             currentMinuteOfDay <= notificationMinuteOfDay + 5
 
                     // Check if we've already sent this notification today
-                    val hasBeenNotified = hasNotificationBeenSent(story.id ?: 0, story.date)
+                    val hasBeenNotified = hasNotificationBeenSent(daily.id ?: 0, daily.date)
 
                     val willNotify = shouldNotify && !hasBeenNotified
 
                     // Log for debugging
                     if (shouldNotify) {
-                        Log.d("NotificationWorker", "Story ${story.title} - Should notify: $shouldNotify, Already notified: $hasBeenNotified")
+                        Log.d("NotificationWorker", "Daily ${daily.title} - Should notify: $shouldNotify, Already notified: $hasBeenNotified")
                     }
 
                     willNotify
                 } catch (e: Exception) {
-                    Log.e("NotificationWorker", "Error processing story: ${story.title}", e)
+                    Log.e("NotificationWorker", "Error processing daily: ${daily.title}", e)
                     false
                 }
             }
 
-            Log.d("NotificationWorker", "Found ${storiesToNotify.size} stories to notify about")
+            Log.d("NotificationWorker", "Found ${dailiesToNotify.size} dailies to notify about")
 
-            if (storiesToNotify.isNotEmpty()) {
-                sendNotifications(storiesToNotify)
+            if (dailiesToNotify.isNotEmpty()) {
+                sendNotifications(dailiesToNotify)
 
                 // Mark these notifications as sent
-                storiesToNotify.forEach { story ->
-                    markNotificationAsSent(story.id ?: 0, story.date)
+                dailiesToNotify.forEach { daily ->
+                    markNotificationAsSent(daily.id ?: 0, daily.date)
                 }
             } else {
-                Log.d("NotificationWorker", "No stories to notify about right now")
+                Log.d("NotificationWorker", "No dailies to notify about right now")
             }
 
             return Result.success()
@@ -124,28 +124,28 @@ class NotificationWorker(
     }
 
     // Helper method to check if a notification has already been sent today
-    private fun hasNotificationBeenSent(storyId: Int, date: String): Boolean {
+    private fun hasNotificationBeenSent(dailyId: Int, date: String): Boolean {
         val prefs = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
-        val prefKey = "notification_sent_${storyId}_${date}"
+        val prefKey = "notification_sent_${dailyId}_${date}"
         return prefs.getBoolean(prefKey, false)
     }
 
     // Helper method to mark a notification as sent
-    private fun markNotificationAsSent(storyId: Int, date: String) {
+    private fun markNotificationAsSent(dailyId: Int, date: String) {
         val prefs = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
-        val prefKey = "notification_sent_${storyId}_${date}"
+        val prefKey = "notification_sent_${dailyId}_${date}"
         prefs.edit().putBoolean(prefKey, true).apply()
     }
 
-    // Helper method to convert story date and time strings to timestamp
-    private fun getDateTimeFromStory(story: Story): Long {
+    // Helper method to convert daily date and time strings to timestamp
+    private fun getDateTimeFromDaily(daily: Daily): Long {
         val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
-        val localDateTime = java.time.LocalDateTime.parse("${story.date} ${story.time}", formatter)
+        val localDateTime = java.time.LocalDateTime.parse("${daily.date} ${daily.time}", formatter)
         return localDateTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
-    private fun sendNotifications(stories: List<Story>) {
-        Log.d("NotificationWorker", "Sending notifications for ${stories.size} stories")
+    private fun sendNotifications(dailies: List<Daily>) {
+        Log.d("NotificationWorker", "Sending notifications for ${dailies.size} dailies")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ActivityCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
@@ -153,39 +153,39 @@ class NotificationWorker(
             return
         }
         val notificationManager = NotificationManagerCompat.from(applicationContext)
-        val channelId = "story_notifications"
+        val channelId = "daily_notifications"
 
         // Create notification channel for Android O and above
         val channel = NotificationChannel(
             channelId,
-            "Story Notifications",
+            "Daily Notifications",
             NotificationManager.IMPORTANCE_DEFAULT
         )
         notificationManager.createNotificationChannel(channel)
 
-        stories.forEach { story ->
+        dailies.forEach { daily ->
             val emoji = when {
-                story.done -> "✅"
-                story.priority == 3 -> "🔴" // High priority
-                story.priority == 2 -> "🟡" // Medium priority
-                story.priority == 1 -> "🟢" // Low priority
+                daily.done -> "✅"
+                daily.priority == 3 -> "🔴" // High priority
+                daily.priority == 2 -> "🟡" // Medium priority
+                daily.priority == 1 -> "🟢" // Low priority
                 else -> "📝"
             }
 
-            val dateFormatted = story.date.split("-").joinToString("/")
-            val timeFormatted = story.time.split(":").take(2).joinToString("h")
+            val dateFormatted = daily.date.split("-").joinToString("/")
+            val timeFormatted = daily.time.split(":").take(2).joinToString("h")
 
             // Personnaliser le texte en fonction du délai de notification
-            val timeDesc = when(story.notificationTime) {
+            val timeDesc = when(daily.notificationTime) {
                 "15" -> "15 minutes"
                 "30" -> "30 minutes"
                 "60" -> "1 heure"
                 "120" -> "2 heures"
                 "1440" -> "1 jour"
-                else -> story.notificationTime
+                else -> daily.notificationTime
             }
 
-            val contentText = "📝 Rappel: ${story.title} aura lieu dans $timeDesc - $dateFormatted à $timeFormatted"
+            val contentText = "📝 Rappel: ${daily.title} aura lieu dans $timeDesc - $dateFormatted à $timeFormatted"
 
             val notification = NotificationCompat.Builder(applicationContext, channelId)
                 .setSmallIcon(R.drawable.logo)
@@ -200,8 +200,8 @@ class NotificationWorker(
                     Manifest.permission.POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
-                notificationManager.notify(story.id ?: 0, notification)
-                Log.d("NotificationWorker", "Notification sent for: ${story.title}")
+                notificationManager.notify(daily.id ?: 0, notification)
+                Log.d("NotificationWorker", "Notification sent for: ${daily.title}")
             }
         }
     }

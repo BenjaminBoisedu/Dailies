@@ -37,14 +37,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.helloworld.presentations.list.StoryVM
+import com.example.helloworld.presentations.list.DailyVM
 
 @Composable
-fun StoryCard(
-    story: StoryVM,
-    onDeleteClick: (StoryVM) -> Unit,
-    onEditClick: (StoryVM) -> Unit,
-    onDetailClick: (StoryVM) -> Unit,
+fun DailyCard(
+    daily: DailyVM,
+    onDeleteClick: (DailyVM) -> Unit,
+    onEditClick: (DailyVM) -> Unit,
+    onDetailClick: (DailyVM) -> Unit,
 ) {
     Box(modifier = Modifier
         .padding(2.dp)
@@ -59,7 +59,7 @@ fun StoryCard(
                 .padding(3.dp)
                 .width(320.dp),
             colors = CardDefaults.elevatedCardColors(
-                containerColor = story.priority?.backgroundColor ?: Color.White,
+                containerColor = daily.priority?.backgroundColor ?: Color.White,
                 contentColor = Color.White
             ),
         ) {
@@ -69,7 +69,7 @@ fun StoryCard(
                 horizontalArrangement = Arrangement.End
             ) {
                 Text(
-                    text = story.title,
+                    text = daily.title,
                     modifier = Modifier.offset(x = (-10).dp, y = (-11).dp)
                         .padding(horizontal = 8.dp)
                         .background(Color.White, RoundedCornerShape(bottomEnd = 12.dp))
@@ -85,7 +85,7 @@ fun StoryCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                if (story.done) {
+                if (daily.done) {
                     Column (
                         modifier = Modifier.padding(8.dp)
                             .offset(y = (-10).dp, x = (-20).dp),
@@ -93,7 +93,7 @@ fun StoryCard(
                         verticalArrangement = Arrangement.Center)
                     {
                         IconButton(
-                            onClick = { onDeleteClick(story) },
+                            onClick = { onDeleteClick(daily) },
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
@@ -112,7 +112,7 @@ fun StoryCard(
                     )
                     {
                         IconButton(
-                            onClick = { onEditClick(story) },
+                            onClick = { onEditClick(daily) },
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
@@ -125,13 +125,13 @@ fun StoryCard(
             }
             Column  {
                 Text(
-                    text = story.description ?: "",
+                    text = daily.description ?: "",
                     modifier = Modifier
                         .offset(x = 7.dp)
                         .padding(8.dp),
                     style = TextStyle(
                         fontSize = 18.sp,
-                        color = story.priority?.foregroundColor ?: Color.White
+                        color = daily.priority?.foregroundColor ?: Color.White
 
                     ),
                     maxLines = 1,
@@ -146,7 +146,7 @@ fun StoryCard(
                         modifier = Modifier
                             .offset(x = 10.dp),
                         border = BorderStroke(2.dp, Color.White),
-                        label = { Text(text = story.date) },
+                        label = { Text(text = daily.date) },
                         onClick = { },
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = Color(0xFF303030),
@@ -157,7 +157,7 @@ fun StoryCard(
                                 Icons.Default.DateRange,
                                 contentDescription = "Localized description",
                                 Modifier.size(AssistChipDefaults.IconSize),
-                                tint = story.priority?.backgroundColor ?: Color.White
+                                tint = daily.priority?.backgroundColor ?: Color.White
                             )
                         },
                         shape = RoundedCornerShape(8.dp)
@@ -167,7 +167,7 @@ fun StoryCard(
                         modifier = Modifier
                             .offset(x = 10.dp),
                         border = BorderStroke(2.dp, Color.White),
-                        label = { Text(text = story.time) },
+                        label = { Text(text = daily.time) },
                         onClick = { },
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = Color(0xFF303030),
@@ -178,14 +178,14 @@ fun StoryCard(
                                 Icons.Default.DateRange,
                                 contentDescription = "Localized description",
                                 Modifier.size(AssistChipDefaults.IconSize),
-                                tint = story.priority?.backgroundColor ?: Color.White
+                                tint = daily.priority?.backgroundColor ?: Color.White
                             )
                         },
                         shape = RoundedCornerShape(8.dp)
                     )
 
                     IconButton(
-                        onClick = { onDetailClick(story) },
+                        onClick = { onDetailClick(daily) },
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -195,7 +195,7 @@ fun StoryCard(
                     }
                 }
             }
-            if (story.done) {
+            if (daily.done) {
                 Row (
                     modifier = Modifier
                         .fillMaxWidth()

@@ -3,8 +3,8 @@ package com.example.helloworld.domain.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "stories")
-data class Story(
+@Entity(tableName = "dailies")
+data class Daily(
     @PrimaryKey(autoGenerate = true)
     val id: Int? = null,
     val title: String,
@@ -20,5 +20,4 @@ data class Story(
     val recurringInterval: Int = 0,
     val isRecurring: Boolean = false,
     val notificationTime: String = "30",  // Default 30 minutes before
-
 )

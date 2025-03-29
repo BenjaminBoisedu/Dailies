@@ -2,11 +2,11 @@ package com.example.helloworld.utils
 
 import com.example.helloworld.presentations.HighPriority
 import com.example.helloworld.presentations.StandardPriority
-import com.example.helloworld.presentations.list.StoryVM
+import com.example.helloworld.presentations.list.DailyVM
 import kotlinx.coroutines.flow.flow
 
-private val storiesList: MutableList<StoryVM> = mutableListOf(
-    StoryVM(
+private val dailiesList: MutableList<DailyVM> = mutableListOf(
+    DailyVM(
         id = 1,
         title = "Revisez vos cours",
         description = "Rappel pour réviser les cours",
@@ -15,7 +15,7 @@ private val storiesList: MutableList<StoryVM> = mutableListOf(
         date = "21-02-2025",
         time = "20:38"
     ),
-    StoryVM(
+    DailyVM(
         id = 2,
         title = "Faire mes courses",
         description = "Rappel pour faire les courses",
@@ -24,7 +24,7 @@ private val storiesList: MutableList<StoryVM> = mutableListOf(
         date = "18-02-2025",
         time = "12:00"
     ),
-    StoryVM(
+    DailyVM(
         id = 3,
         title = "Notifications",
         description = "En tant que abonné, je veux recevoir des notifications",
@@ -33,7 +33,7 @@ private val storiesList: MutableList<StoryVM> = mutableListOf(
         date = "13-02-2025",
         time = "12:00"
     ),
-    StoryVM(
+    DailyVM(
         id = 4,
         title = "Recherche d’articles",
         description = "En tant que utilisateur, je veux voir des articles",
@@ -43,24 +43,24 @@ private val storiesList: MutableList<StoryVM> = mutableListOf(
         time = "12:00"
     )
 )
-class StoryException(message: String, e: Exception) : Throwable(message)
+class DailyException(message: String, e: Exception) : Throwable(message)
 
-fun getStories() = flow {
-    emit(storiesList)
+fun getDailies() = flow {
+    emit(dailiesList)
 }
 
-fun addOrUpdateStory(story: StoryVM) {
-    if (story.title.isBlank() || story.description?.isBlank() != false || story.date.isBlank() || story.time.isBlank() || story.priority == null) {
-        throw StoryException("Unable to save story: Title cannot be empty", Exception("Title cannot be empty"))
+fun addOrUpdateDaily(daily: DailyVM) {
+    if (daily.title.isBlank() || daily.description?.isBlank() != false || daily.date.isBlank() || daily.time.isBlank() || daily.priority == null) {
+        throw DailyException("Unable to save daily : Title cannot be empty", Exception("Title cannot be empty"))
     }
 
-    val existingStory = storiesList.find { it.id == story.id }
-    existingStory?.let {
-        storiesList.remove(it)
+    val existingDaily = dailiesList.find { it.id == daily.id }
+    existingDaily?.let {
+        dailiesList.remove(it)
     }
-    storiesList.add(story)
+    dailiesList.add(daily)
 }
 
-fun findStory(storyId: Int) : StoryVM? {
-    return storiesList.find { it .id == storyId }
+fun findDaily(dailyId: Int) : DailyVM? {
+    return dailiesList.find { it .id == dailyId }
 }

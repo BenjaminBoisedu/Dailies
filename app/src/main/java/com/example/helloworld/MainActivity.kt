@@ -1,7 +1,5 @@
 package com.example.helloworld
 
-import android.app.AlertDialog
-import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -22,11 +20,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.room.Room
-import com.example.helloworld.data.source.StoriesDatabase
-import com.example.helloworld.presentations.addedit.AddEditStoryScreen
-import com.example.helloworld.presentations.details.DetailStoryScreen
-import com.example.helloworld.presentations.list.ListStoriesScreen
-import com.example.helloworld.presentations.list.ListStoriesViewModel
+import com.example.helloworld.data.source.DailiesDatabase
+import com.example.helloworld.presentations.addedit.AddEditDailyScreen
+import com.example.helloworld.presentations.details.DetailDailyScreen
+import com.example.helloworld.presentations.list.ListDailiesScreen
+import com.example.helloworld.presentations.list.ListDailiesViewModel
 import com.example.helloworld.presentations.navigation.Screen
 import com.example.helloworld.ui.theme.HelloWorldTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -50,16 +48,16 @@ class MainActivity : ComponentActivity() {
     private val db by lazy {
         Room.databaseBuilder(
             applicationContext,
-            StoriesDatabase::class.java,
-            StoriesDatabase.DATABASE_NAME
+            DailiesDatabase::class.java,
+            DailiesDatabase.DATABASE_NAME
         )
             .addMigrations(
-                StoriesDatabase.MIGRATION_1_2,
-                StoriesDatabase.MIGRATION_2_3,
-                StoriesDatabase.MIGRATION_3_4,
-                StoriesDatabase.MIGRATION_4_5,
-                StoriesDatabase.MIGRATION_3_5,
-                StoriesDatabase.MIGRATION_5_6
+                DailiesDatabase.MIGRATION_1_2,
+                DailiesDatabase.MIGRATION_2_3,
+                DailiesDatabase.MIGRATION_3_4,
+                DailiesDatabase.MIGRATION_4_5,
+                DailiesDatabase.MIGRATION_3_5,
+                DailiesDatabase.MIGRATION_5_6
             )
             .build()
     }
@@ -82,24 +80,24 @@ class MainActivity : ComponentActivity() {
 
                     NavHost(
                         navController = navController,
-                        startDestination = Screen.StoriesListScreen.route,
+                        startDestination = Screen.DailiesListScreen.route,
                         modifier = Modifier.padding()
                     ) {
-                        composable(Screen.StoriesListScreen.route) {
-                            ListStoriesScreen(navController)
+                        composable(Screen.DailiesListScreen.route) {
+                            ListDailiesScreen(navController)
                         }
-                        composable(Screen.AddEditStoryScreen.route + "?storyId={storyId}",
+                        composable(Screen.AddEditDailyScreen.route + "?dailyId={dailyId}",
                             arguments = listOf(
-                                navArgument("storyId")
+                                navArgument("dailyId")
                                 { type = NavType.IntType
                                 defaultValue = -1}
                             )
                         ) {
-                            AddEditStoryScreen(navController)
+                            AddEditDailyScreen(navController)
                         }
-                        composable(Screen.DetailStoryScreen.route) {
-                            val viewModel: ListStoriesViewModel = viewModel()
-                            DetailStoryScreen(navController, viewModel)
+                        composable(Screen.DetailDailyScreen.route) {
+                            val viewModel: ListDailiesViewModel = viewModel()
+                            DetailDailyScreen(navController, viewModel)
                         }
                     }
                 }

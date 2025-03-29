@@ -2,13 +2,13 @@ package com.example.helloworld.di
 
 import android.app.Application
 import androidx.room.Room
-import com.example.helloworld.data.source.StoriesDatabase
-import com.example.helloworld.domain.useCases.DeleteStoryUseCase
-import com.example.helloworld.domain.useCases.EditStoryUseCase
-import com.example.helloworld.domain.useCases.GetStoriesUseCase
-import com.example.helloworld.domain.useCases.GetStoryUseCase
-import com.example.helloworld.domain.useCases.StoriesUseCases
-import com.example.helloworld.domain.useCases.UpsertStoryUseCase
+import com.example.helloworld.data.source.DailiesDatabase
+import com.example.helloworld.domain.useCases.DeleteDailyUseCase
+import com.example.helloworld.domain.useCases.EditDailyUseCase
+import com.example.helloworld.domain.useCases.GetDailiesUseCase
+import com.example.helloworld.domain.useCases.GetDailyUseCase
+import com.example.helloworld.domain.useCases.DailiesUseCases
+import com.example.helloworld.domain.useCases.UpsertDailyUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,23 +20,23 @@ import javax.inject.Singleton
 object AppModule {
     @Provides
     @Singleton
-    fun provideStoriesDatabase(app: Application): StoriesDatabase {
+    fun provideDailiesDatabase(app: Application): DailiesDatabase {
         return Room.databaseBuilder(
             app,
-            StoriesDatabase::class.java,
-            StoriesDatabase.DATABASE_NAME
+            DailiesDatabase::class.java,
+            DailiesDatabase.DATABASE_NAME
         ).build()
     }
 
     @Provides
     @Singleton
-    fun provideStoriesUseCases(db: StoriesDatabase): StoriesUseCases {
-        return StoriesUseCases(
-            getStories = GetStoriesUseCase(db.dao),
-            getStory = GetStoryUseCase(db.dao),
-            upsertStory = UpsertStoryUseCase(db.dao),
-            editStory = EditStoryUseCase(db.dao),
-            deleteStory = DeleteStoryUseCase(db.dao)
+    fun provideDailiesUseCases(db: DailiesDatabase): DailiesUseCases {
+        return DailiesUseCases(
+            getDailies = GetDailiesUseCase(db.dao),
+            getDaily = GetDailyUseCase(db.dao),
+            upsertDaily = UpsertDailyUseCase(db.dao),
+            editDaily = EditDailyUseCase(db.dao),
+            deleteDaily = DeleteDailyUseCase(db.dao)
         )
     }
 }
