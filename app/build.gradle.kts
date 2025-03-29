@@ -71,6 +71,8 @@ dependencies {
 
     // Work Manager
     implementation(libs.androidx.work.runtime.ktx)
+    implementation (libs.androidx.work.runtime.ktx.v281)
+    implementation (libs.androidx.core.ktx.v1120)
     androidTestImplementation(libs.androidx.work.testing)
 
     // Testing

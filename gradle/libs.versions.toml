@@ -1,6 +1,7 @@
 [versions]
 agp = "8.8.0"
 androidxCoreKtx = "2.2.0"
+androidxCoreKtxVersion = "1.12.0"
 kotlin = "2.0.0"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -13,6 +14,7 @@ navigationComposeVersion = "2.7.7"
 workRuntimeKtx = "2.10.0"
 coreKtxVersion = "1.6.1"
 junitKtx = "1.2.1"
+workRuntimeKtxVersion = "2.8.1"
 workTesting = "2.10.0"
 roomVersion = "2.6.1"
 kspVersion = "2.0.0-1.0.24"
@@ -21,9 +23,12 @@ daggerHiltVersion = "2.49"
 hiltNavigationComposeVersion = "1.1.0"
 hiltCommon = "1.2.0"
 
+
 [libraries]
 
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-ktx-v1120 = { module = "androidx.core:core-ktx", version.ref = "androidxCoreKtxVersion" }
+androidx-work-runtime-ktx-v281 = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtxVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

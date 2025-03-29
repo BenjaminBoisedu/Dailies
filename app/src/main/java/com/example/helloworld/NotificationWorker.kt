@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.util.Log
 import androidx.core.app.ActivityCompat
@@ -12,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.room.Room
 import androidx.work.CoroutineWorker
+import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.example.helloworld.data.source.DailiesDatabase
 import com.example.helloworld.domain.model.Daily
@@ -44,7 +46,8 @@ class NotificationWorker(
 
     override suspend fun doWork(): Result {
         Log.d("NotificationWorker", "Worker started")
-        val currentTimeMillis = System.currentTimeMillis()
+
+        setForeground(createForegroundInfo())
 
         try {
             // Get dailies directly from the database
@@ -116,11 +119,50 @@ class NotificationWorker(
                 Log.d("NotificationWorker", "No dailies to notify about right now")
             }
 
+            Log.d("NotificationWorker", "Worker completed successfully")
             return Result.success()
         } catch (e: Exception) {
-            Log.e("NotificationWorker", "Error in worker", e)
+            Log.e("NotificationWorker", "Worker failed", e)
             return Result.failure()
         }
+    }
+
+    private fun createForegroundInfo(): ForegroundInfo {
+        val channelId = "worker_notification_channel"
+
+        // Create notification channel for Android O and above
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Worker Notifications",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(applicationContext, channelId)
+            .setContentTitle("Vérification des rappels")
+            .setSmallIcon(R.drawable.logo_appli)
+            .setOngoing(true)
+            .setSilent(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
+
+        // For Android 14 (API 34) and higher, specify foreground service type
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ForegroundInfo(
+                NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            )
+        } else {
+            ForegroundInfo(NOTIFICATION_ID, notification)
+        }
+    }
+
+    companion object {
+        private const val NOTIFICATION_ID = 1
     }
 
     // Helper method to check if a notification has already been sent today
