@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -38,7 +37,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Shapes
@@ -75,7 +73,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import java.util.Calendar
@@ -174,58 +171,6 @@ fun AddEditDailyScreen(
             contentPadding = PaddingValues(10.dp)
         ) {
             item{
-                if (viewModel.daily.value.recurringType == "weekly") {
-                    Text(
-                        text = "Répétition les jours suivants:",
-                        style = MaterialTheme.typography.labelLarge.copy(color = Color.White),
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    val daysOfWeek = listOf("Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim")
-                    val selectedDays = remember {
-                        viewModel.daily.value.recurringDays?.split(",") ?: listOf()
-                    }
-
-                    LazyRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(daysOfWeek.size) { index ->
-                            val day = daysOfWeek[index]
-                            val isSelected = selectedDays.contains(index.toString())
-
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .background(
-                                        if (isSelected) Color(0xFF99A4BE) else Color.LightGray.copy(alpha = 0.7f)
-                                    )
-                                    .clickable {
-                                        val currentDays = viewModel.daily.value.recurringDays?.split(",")?.toMutableList() ?: mutableListOf()
-
-                                        if (currentDays.contains(index.toString())) {
-                                            currentDays.remove(index.toString())
-                                        } else {
-                                            currentDays.add(index.toString())
-                                        }
-
-                                        viewModel.onEvent(AddEditDailyEvent.RecurringDaysChanged(currentDays.joinToString(",")))
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = day,
-                                    color = if (isSelected) Color.White else Color.Black,
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
                 val daily = viewModel.daily.value
                 OutlinedTextField(
                     value = daily.title,
@@ -407,7 +352,7 @@ fun AddEditDailyScreen(
                                 .fillMaxWidth()
                                 .border(3.dp, Color.White, Shapes().medium),
                             readOnly = true,
-                            enabled = false,  // Désactive l'interaction directe
+                            enabled = false,  // Abstractive interaction direct
                             colors = TextFieldDefaults.colors(
                                 focusedTextColor = Color.Black,
                                 disabledTextColor = Color.Black,  // Garde le texte visible quand désactivé
@@ -498,6 +443,37 @@ fun AddEditDailyScreen(
                     }
                 }
                 Spacer(modifier = Modifier.height(30.dp))
+
+                // Listes des jours de la semaine
+                val daysOfWeek = listOf("Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche")
+                val selectedDays = viewModel.daily.value.recurringDays?.split(",")?.map { it.trim() } ?: emptyList()
+                val selectedDaysSet = selectedDays.toSet()
+                val selectedDaysString = selectedDays.joinToString(", ")
+
+                Text(
+                    text = "Jours de la semaine",
+                    fontSize = 20.sp,
+                    modifier = Modifier.padding(start = 16.dp),
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        color = Color.White
+                            .copy(alpha = 0.8f)
+                    ),
+                    fontWeight = MaterialTheme.typography.headlineMedium.fontWeight,
+                    fontFamily = MaterialTheme.typography.headlineMedium.fontFamily
+                )
+
+                // Section "Notification"
+                Text(
+                    text = "Notification",
+                    fontSize = 20.sp,
+                    modifier = Modifier.padding(start = 16.dp),
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        color = Color.White
+                            .copy(alpha = 0.8f)
+                    ),
+                    fontWeight = MaterialTheme.typography.headlineMedium.fontWeight,
+                    fontFamily = MaterialTheme.typography.headlineMedium.fontFamily
+                )
 
                 val options = listOf(15, 30, 60, 120, 1440) // 15min, 30min, 1h, 2h, 1 jour
                 val optionLabels = listOf("15 min", "30 min", "1 heure", "2 heures", "1 jour")
@@ -603,34 +579,7 @@ fun AddEditDailyScreen(
                                 selected = viewModel.daily.value.recurringType == "monthly",
                             )
                         }
-
                         Spacer(modifier = Modifier.height(8.dp))
-
-                        // Sélecteur d'intervalle
-                        var intervalText by remember {
-                            mutableStateOf(
-                                if (viewModel.daily.value.recurringInterval > 0)
-                                    viewModel.daily.value.recurringInterval.toString()
-                                else ""
-                            )
-                        }
-
-                        TextField(
-                            value = intervalText,
-                            onValueChange = {
-                                intervalText = it.filter { char -> char.isDigit() }
-                                val interval = intervalText.toIntOrNull() ?: 0
-                                viewModel.onEvent(AddEditDailyEvent.RecurringIntervalChanged(interval))
-                            },
-                            label = { Text("Repeat every (interval)") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.fillMaxWidth()
-                                .border(3.dp, Color.White, Shapes().medium),
-                            colors = TextFieldDefaults.colors(
-                                focusedTextColor = Color.Black,
-                            ),
-                            shape = Shapes().medium
-                        )
                     }
                 }
                 Row(

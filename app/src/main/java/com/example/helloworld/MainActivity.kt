@@ -57,7 +57,8 @@ class MainActivity : ComponentActivity() {
                 DailiesDatabase.MIGRATION_3_4,
                 DailiesDatabase.MIGRATION_4_5,
                 DailiesDatabase.MIGRATION_3_5,
-                DailiesDatabase.MIGRATION_5_6
+                DailiesDatabase.MIGRATION_5_6,
+                DailiesDatabase.MIGRATION_6_7
             )
             .build()
     }

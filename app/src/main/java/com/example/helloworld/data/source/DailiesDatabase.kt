@@ -2,11 +2,14 @@ package com.example.helloworld.data.source
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.helloworld.data.converters.StringListConverter
 import com.example.helloworld.domain.model.Daily
 
-@Database(entities = [Daily::class], version = 6, exportSchema = false)
+@Database(entities = [Daily::class], version = 7, exportSchema = false)
+@TypeConverters(StringListConverter::class)
 abstract class DailiesDatabase : RoomDatabase() {
     abstract val dao: DailiesDao
 
@@ -60,6 +63,13 @@ abstract class DailiesDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // Add the notificationTime column with default value "30"
                 db.execSQL("ALTER TABLE dailies ADD COLUMN notificationTime TEXT NOT NULL DEFAULT '30'")
+            }
+        }
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add the recurringDays column to store selected days of the week
+                db.execSQL("ALTER TABLE dailies ADD COLUMN recurringDays TEXT DEFAULT NULL")
             }
         }
     }

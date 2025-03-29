@@ -40,7 +40,8 @@ class NotificationWorker(
                 DailiesDatabase.MIGRATION_3_4,
                 DailiesDatabase.MIGRATION_4_5,
                 DailiesDatabase.MIGRATION_3_5,
-                DailiesDatabase.MIGRATION_5_6
+                DailiesDatabase.MIGRATION_5_6,
+                DailiesDatabase.MIGRATION_6_7
             )
             .build()
     }
@@ -176,13 +177,6 @@ class NotificationWorker(
         val prefs = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
         val prefKey = "notification_sent_${dailyId}_${date}"
         prefs.edit().putBoolean(prefKey, true).apply()
-    }
-
-    // Helper method to convert daily date and time strings to timestamp
-    private fun getDateTimeFromDaily(daily: Daily): Long {
-        val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
-        val localDateTime = java.time.LocalDateTime.parse("${daily.date} ${daily.time}", formatter)
-        return localDateTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
     private fun sendNotifications(dailies: List<Daily>) {

@@ -17,7 +17,7 @@ data class Daily(
     val longitude: Double? = null,
     val locationName: String? = null,
     val recurringType: String = "",
-    val recurringDays: List<String> = emptyList(),
+    val recurringDays: String? = null,
     val isRecurring: Boolean = false,
     val notificationTime: String = "30",  // Default 30 minutes before
 ) {

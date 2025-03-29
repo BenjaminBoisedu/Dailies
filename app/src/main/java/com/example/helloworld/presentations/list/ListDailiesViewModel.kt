@@ -99,7 +99,7 @@ data class DailyVM(
     val locationName: String? = null,
     val isRecurring: Boolean = false,
     val recurringType: String = "", // "daily", "weekly", "monthly"
-    val recurringDays: List<String> = emptyList(),
+    val recurringDays: String? = null, // Stored as comma-separated values
     val notificationTime: String = "30" // Default 30 minutes before
 
 ){
@@ -118,7 +118,7 @@ data class DailyVM(
                 locationName = entity.locationName,
                 isRecurring = entity.isRecurring,
                 recurringType = entity.recurringType,
-                recurringDays = entity.recurringDays,
+                recurringDays = entity.recurringDays?.split(",")?.filter { it.isNotEmpty() }.toString(),
                 notificationTime = entity.notificationTime
             )
         }
@@ -139,8 +139,8 @@ fun DailyVM.toEntity(): Daily {
         longitude = this.longitude,
         locationName = this.locationName,
         recurringType = this.recurringType,
-        recurringDays = this.recurringDays,
         isRecurring = this.isRecurring,
+        recurringDays = this.recurringDays,
         notificationTime = this.notificationTime
     )
 }

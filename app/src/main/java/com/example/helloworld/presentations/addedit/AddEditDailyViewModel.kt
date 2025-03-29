@@ -91,16 +91,38 @@ class AddEditDailyViewModel @Inject constructor(
                 }
             }
 
-           is AddEditDailyEvent.DailyRecurringChanged -> {
+            is AddEditDailyEvent.DailyRecurringChanged -> {
                 _daily.value = _daily.value.copy(isRecurring = event.isRecurring)
             }
             is AddEditDailyEvent.RecurringTypeSelected -> {
                 _daily.value = _daily.value.copy(recurringType = event.type)
             }
+            is AddEditDailyEvent.RecurringDaysSelected -> {
+                _daily.value = _daily.value.copy(recurringDays = event.days)
+            }
 
             is AddEditDailyEvent.LocationSelected -> TODO()
             is AddEditDailyEvent.NotificationTimeSelected -> {
                 _daily.value = _daily.value.copy(notificationTime = event.time)
+            }
+
+            is AddEditDailyEvent.RecurringDaysChanged -> {
+                val day = event.day  // Day name (e.g., "Lun", "Mar")
+
+                // Get current list of selected days
+                val currentDays = _daily.value.recurringDays?.split(",")?.filter { it.isNotEmpty() }?.toMutableList() ?: mutableListOf()
+
+                // Toggle the day (add if not present, remove if present)
+                if (currentDays.contains(day)) {
+                    currentDays.remove(day)
+                } else {
+                    currentDays.add(day)
+                }
+
+                // Update the view model state with the new comma-separated list
+                _daily.value = _daily.value.copy(
+                    recurringDays = currentDays.joinToString(",")
+                )
             }
         }
     }

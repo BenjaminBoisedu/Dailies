@@ -4,6 +4,8 @@ import com.example.helloworld.presentations.PriorityType
 
 
 sealed interface AddEditDailyEvent {
+    fun joinToString(): List<String>  = emptyList()
+
     data class EnteredTitle(val title: String) :
         AddEditDailyEvent
 
@@ -23,5 +25,6 @@ sealed interface AddEditDailyEvent {
         val longitude: Double,
         val locationName: String
     ) : AddEditDailyEvent
-    data class
+    data class RecurringDaysSelected(val days: String) : AddEditDailyEvent
+    data class RecurringDaysChanged(val day: String) : AddEditDailyEvent
 }
