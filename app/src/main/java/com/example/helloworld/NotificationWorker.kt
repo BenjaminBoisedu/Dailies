@@ -47,6 +47,7 @@ class NotificationWorker(
     override suspend fun doWork(): Result {
         Log.d("NotificationWorker", "Worker started")
 
+        // The key issue - setting foreground service with proper type
         setForeground(createForegroundInfo())
 
         try {
@@ -162,7 +163,7 @@ class NotificationWorker(
     }
 
     companion object {
-        private const val NOTIFICATION_ID = 1
+        private const val NOTIFICATION_ID = 9999
     }
 
     // Helper method to check if a notification has already been sent today

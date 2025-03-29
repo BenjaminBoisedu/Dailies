@@ -18,6 +18,8 @@ fun scheduleNotificationWorker(context: Context) {
     val constraints = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED)
         // Remove battery constraints completely
+        .setRequiresBatteryNotLow(true)
+        .setRequiresDeviceIdle(false)
         .build()
 
     // Run the worker more frequently to catch all notifications
