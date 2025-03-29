@@ -3,6 +3,7 @@ package com.example.helloworld
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
@@ -230,12 +231,23 @@ class NotificationWorker(
 
             val contentText = "📝 Rappel: ${daily.title} aura lieu dans $timeDesc - $dateFormatted à $timeFormatted"
 
+            // Create an intent to open the app when notification is clicked
+            val intent = applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)
+            val pendingIntent = PendingIntent.getActivity(
+                applicationContext,
+                daily.id ?: 0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+
             val notification = NotificationCompat.Builder(applicationContext, channelId)
                 .setSmallIcon(R.drawable.logo)
                 .setContentTitle("$emoji Rappel")
                 .setContentText(contentText)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
                 .build()
 
             if (ActivityCompat.checkSelfPermission(

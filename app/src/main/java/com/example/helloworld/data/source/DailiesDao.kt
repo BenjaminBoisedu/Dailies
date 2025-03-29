@@ -23,6 +23,8 @@ interface DailiesDao {
 
     @Upsert
     suspend fun upsertDaily(daily: Daily)
+
     @Delete
     suspend fun deleteDaily(daily: Daily) : Int
+
 }

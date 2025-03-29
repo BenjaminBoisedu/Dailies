@@ -57,7 +57,7 @@ class ListDailiesViewModel @Inject constructor(
         }
     }
     private fun saveDailyToDatabase(daily: DailyVM) {
-        daily.toEntity()?.let { entity ->
+        daily.toEntity().let { entity ->
             viewModelScope.launch {
                 dailiesUseCases.upsertDaily(entity)
             }
@@ -65,17 +65,16 @@ class ListDailiesViewModel @Inject constructor(
     }
 
     fun deleteDaily(daily: DailyVM) {
-        daily.toEntity()?.let { entity ->
+        daily.toEntity().let { entity ->
             viewModelScope.launch {
                 try {
                     val isDeleted = dailiesUseCases.deleteDaily(entity)
                     if (isDeleted) {
-                        // Manually update the state to remove the deleted daily
                         _dailies.value = _dailies.value.filter { it.id != daily.id }
                     }
-                    // The Flow collection in loadDailies() will also handle updating the list
                 } catch (e: Exception) {
-                    // Handle error
+                    // Handle the error if needed
+                    println("Error deleting daily: ${e.message}")
                 }
             }
         }
