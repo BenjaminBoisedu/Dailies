@@ -97,9 +97,6 @@ class AddEditDailyViewModel @Inject constructor(
             is AddEditDailyEvent.RecurringTypeSelected -> {
                 _daily.value = _daily.value.copy(recurringType = event.type)
             }
-            is AddEditDailyEvent.RecurringIntervalChanged -> {
-                _daily.value = _daily.value.copy(recurringInterval = event.interval)
-            }
 
             is AddEditDailyEvent.LocationSelected -> TODO()
             is AddEditDailyEvent.NotificationTimeSelected -> {

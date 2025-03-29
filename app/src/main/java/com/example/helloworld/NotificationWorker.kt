@@ -60,7 +60,6 @@ class NotificationWorker(
             val dailiesToNotify = dailies.filter { daily ->
                 try {
                     // Parse the daily date and time
-                    val dailyDateTime = getDateTimeFromDaily(daily)
                     val dailyDate = LocalDate.parse(daily.date, DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.getDefault()))
                     val currentDate = LocalDate.now()
 
@@ -133,15 +132,13 @@ class NotificationWorker(
         val channelId = "worker_notification_channel"
 
         // Create notification channel for Android O and above
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "Worker Notifications",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(
+            channelId,
+            "Worker Notifications",
+            NotificationManager.IMPORTANCE_LOW
+        )
+        val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
 
         val notification = NotificationCompat.Builder(applicationContext, channelId)
             .setContentTitle("Vérification des rappels")

@@ -73,6 +73,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -173,6 +174,58 @@ fun AddEditDailyScreen(
             contentPadding = PaddingValues(10.dp)
         ) {
             item{
+                if (viewModel.daily.value.recurringType == "weekly") {
+                    Text(
+                        text = "Répétition les jours suivants:",
+                        style = MaterialTheme.typography.labelLarge.copy(color = Color.White),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    val daysOfWeek = listOf("Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim")
+                    val selectedDays = remember {
+                        viewModel.daily.value.recurringDays?.split(",") ?: listOf()
+                    }
+
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(daysOfWeek.size) { index ->
+                            val day = daysOfWeek[index]
+                            val isSelected = selectedDays.contains(index.toString())
+
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(
+                                        if (isSelected) Color(0xFF99A4BE) else Color.LightGray.copy(alpha = 0.7f)
+                                    )
+                                    .clickable {
+                                        val currentDays = viewModel.daily.value.recurringDays?.split(",")?.toMutableList() ?: mutableListOf()
+
+                                        if (currentDays.contains(index.toString())) {
+                                            currentDays.remove(index.toString())
+                                        } else {
+                                            currentDays.add(index.toString())
+                                        }
+
+                                        viewModel.onEvent(AddEditDailyEvent.RecurringDaysChanged(currentDays.joinToString(",")))
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = day,
+                                    color = if (isSelected) Color.White else Color.Black,
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
                 val daily = viewModel.daily.value
                 OutlinedTextField(
                     value = daily.title,
@@ -222,7 +275,7 @@ fun AddEditDailyScreen(
                         fontWeight = FontWeight(700),
                         color = Color(0xFF303030),
                         textAlign = TextAlign.Center,
-                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                        fontFamily = FontFamily.Monospace,
                         modifier = Modifier.align(Alignment.Start)
                             .offset(y = (-24).dp, x = (-7).dp)
                             .padding(horizontal = 8.dp)
