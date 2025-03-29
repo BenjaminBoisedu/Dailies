@@ -23,9 +23,6 @@ class DailiesApp : Application() {
 
         // Schedule background notifications
         scheduleNotificationWorker(applicationContext)
-
-        // Request battery optimization exemptions
-        requestBatteryOptimizationExemption()
     }
 
     private fun createNotificationChannel() {
@@ -41,24 +38,6 @@ class DailiesApp : Application() {
 
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
-        }
-    }
-
-    @SuppressLint("BatteryLife")
-    private fun requestBatteryOptimizationExemption() {
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        val packageName = packageName
-        if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
-            try {
-                val intent = Intent().apply {
-                    action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-                    data = Uri.parse("package:$packageName")
-                }
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-            } catch (e: Exception) {
-                Log.e("DailiesApp", "Error requesting battery optimization exemption", e)
-            }
         }
     }
 }
