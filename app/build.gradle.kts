@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.dailies"
+    namespace = "com.example.daily"
     compileSdk = 35 // Changed from 35
 
     defaultConfig {
-        applicationId = "com.example.dailies"
+        applicationId = "com.example.daily"
         minSdk = 28
         targetSdk = 35 // Changed from 35
         versionCode = 1

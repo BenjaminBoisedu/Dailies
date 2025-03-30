@@ -16,6 +16,7 @@ import androidx.room.Room
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
+import com.example.daily.R
 import com.example.daily.data.source.DailiesDatabase
 import com.example.daily.domain.model.Daily
 import kotlinx.coroutines.flow.first

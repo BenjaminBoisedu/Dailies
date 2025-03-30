@@ -4,14 +4,8 @@ import com.example.daily.presentations.PriorityType
 
 
 sealed interface AddEditDailyEvent {
-    fun joinToString(): List<String>  = emptyList()
-
-    data class EnteredTitle(val title: String) :
-        AddEditDailyEvent
-
-    data class EnteredDescription(val description: String) :
-        AddEditDailyEvent
-
+    data class EnteredTitle(val title: String) : AddEditDailyEvent
+    data class EnteredDescription(val description: String) : AddEditDailyEvent
     data object DailyDone : AddEditDailyEvent
     data class TimeSelected(val time: String) : AddEditDailyEvent
     data class DateSelected(val date: String) : AddEditDailyEvent
