@@ -1,6 +1,7 @@
 package com.example.daily
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.core.content.edit
 
 class NotificationWorker(
     private val context: Context,
@@ -174,16 +176,20 @@ class NotificationWorker(
     }
 
     // Helper method to mark a notification as sent
+    @SuppressLint("UseKtx")
     private fun markNotificationAsSent(dailyId: Int, date: String) {
         val prefs = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
         val prefKey = "notification_sent_${dailyId}_${date}"
-        prefs.edit().putBoolean(prefKey, true).apply()
+        prefs.edit() { putBoolean(prefKey, true) }
     }
 
     private fun sendNotifications(dailies: List<Daily>) {
         Log.d("NotificationWorker", "Sending notifications for ${dailies.size} dailies")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ActivityCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+            ActivityCompat.checkSelfPermission(
+                applicationContext,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
         ) {
             Log.e("NotificationWorker", "Notification permission not granted")
             return
@@ -244,8 +250,7 @@ class NotificationWorker(
 
             if (ActivityCompat.checkSelfPermission(
                     applicationContext,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED
+                    android.Manifest.permission.POST_NOTIFICATIONS                ) == PackageManager.PERMISSION_GRANTED
             ) {
                 notificationManager.notify(daily.id ?: 0, notification)
                 Log.d("NotificationWorker", "Notification sent for: ${daily.title}")
