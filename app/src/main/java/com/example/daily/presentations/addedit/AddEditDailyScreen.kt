@@ -1,6 +1,7 @@
 package com.example.daily.presentations.addedit
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -445,33 +446,35 @@ fun AddEditDailyScreen(
 
                 // Listes des jours de la semaine
                 val daysOfWeek = listOf("Lu", "Ma", "Me", "Je", "Ve", "Sa", "Di")
-                val selectedDays = viewModel.daily.value.recurringDays?.split(",")?.map { it.trim() } ?: emptyList()
-                val selectedDaysSet = selectedDays.toSet()
 
-                Text(
-                    text = "Jours de la semaine",
-                    fontSize = 20.sp,
-                    modifier = Modifier.padding(start = 16.dp),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        color = Color.White
-                            .copy(alpha = 0.8f)
-                    ),
-                    fontWeight = MaterialTheme.typography.headlineMedium.fontWeight,
-                    fontFamily = MaterialTheme.typography.headlineMedium.fontFamily
-                )
+                val daysOrder = mapOf("Lu" to 0, "Ma" to 1, "Me" to 2, "Je" to 3, "Ve" to 4, "Sa" to 5, "Di" to 6)
+                val selectedDays = viewModel.daily.value.recurringDays
+                    .sortedBy { daysOrder[it] ?: Int.MAX_VALUE }
+
+                Log.d("AddEditDailyScreen", "Jours actuellement sélectionnés: $selectedDays")
 
                 LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(daysOfWeek.size) { index ->
                         val day = daysOfWeek[index]
+                        val isSelected = selectedDays.contains(day)
+                        Log.d("AddEditDailyScreen", "Jour sélectionné: $day, État: $isSelected")
                         FilterChip(
                             onClick = {
                                 viewModel.onEvent(AddEditDailyEvent.RecurringDaysChanged(day))
                             },
-                            label = { Text(day) },
-                            selected = selectedDaysSet.contains(day),
+                            label = {
+                                Text(
+                                    text = day,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = if (isSelected) 18.sp else 16.sp
+                                )
+                            },
+                            selected = isSelected,
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Color(0xFF99A4BE),
                                 selectedLabelColor = Color.White,
@@ -480,8 +483,22 @@ fun AddEditDailyScreen(
                                 containerColor = Color.LightGray,
                                 labelColor = Color.Black,
                             ),
+                            border =  FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = isSelected,
+                                borderColor =  if (isSelected) Color(0xFF99A4BE) else Color.LightGray,
+                            )
                         )
                     }
+                }
+
+                if (selectedDays.isNotEmpty()) {
+                    Text(
+                        text = "Sélectionnés : ${selectedDays.joinToString(", ")}",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(start = 16.dp, top = 8.dp)
+                    )
                 }
 
 

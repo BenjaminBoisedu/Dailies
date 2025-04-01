@@ -3,7 +3,6 @@ package com.example.daily.utils
 import com.example.daily.presentations.HighPriority
 import com.example.daily.presentations.StandardPriority
 import com.example.daily.presentations.list.DailyVM
-import kotlinx.coroutines.flow.flow
 
 private val dailiesList: MutableList<DailyVM> = mutableListOf(
     DailyVM(
@@ -13,7 +12,14 @@ private val dailiesList: MutableList<DailyVM> = mutableListOf(
         done = false,
         priority = StandardPriority,
         date = "21-02-2025",
-        time = "20:38"
+        time = "20:38",
+        latitude = 48.8566,
+        longitude = 2.3522,
+        locationName = "Paris",
+        recurringType = "daily",
+        recurringDays = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"),
+        isRecurring = true,
+        notificationTime = "30"
     ),
     DailyVM(
         id = 2,
@@ -22,7 +28,14 @@ private val dailiesList: MutableList<DailyVM> = mutableListOf(
         done = true,
         priority = HighPriority,
         date = "18-02-2025",
-        time = "12:00"
+        time = "12:00",
+        latitude = 48.8566,
+        longitude = 2.3522,
+        locationName = "Paris",
+        recurringType = "daily",
+        recurringDays = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"),
+        isRecurring = true,
+        notificationTime = "30"
     ),
     DailyVM(
         id = 3,
@@ -31,7 +44,14 @@ private val dailiesList: MutableList<DailyVM> = mutableListOf(
         done = true,
         priority = HighPriority,
         date = "13-02-2025",
-        time = "12:00"
+        time = "12:00",
+        latitude = 48.8566,
+        longitude = 2.3522,
+        locationName = "Paris",
+        recurringType = "daily",
+        recurringDays = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"),
+        isRecurring = true,
+        notificationTime = "30"
     ),
     DailyVM(
         id = 4,
@@ -40,27 +60,15 @@ private val dailiesList: MutableList<DailyVM> = mutableListOf(
         done = true,
         priority = HighPriority,
         date = "13-02-2025",
-        time = "12:00"
+        time = "12:00",
+        latitude = 48.8566,
+        longitude = 2.3522,
+        locationName = "Paris",
+        recurringType = "daily",
+        recurringDays = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"),
+        isRecurring = true,
+        notificationTime = "30"
     )
 )
 class DailyException(message: String, e: Exception) : Throwable(message)
 
-fun getDailies() = flow {
-    emit(dailiesList)
-}
-
-fun addOrUpdateDaily(daily: DailyVM) {
-    if (daily.title.isBlank() || daily.description?.isBlank() != false || daily.date.isBlank() || daily.time.isBlank() || daily.priority == null) {
-        throw DailyException("Unable to save daily : Title cannot be empty", Exception("Title cannot be empty"))
-    }
-
-    val existingDaily = dailiesList.find { it.id == daily.id }
-    existingDaily?.let {
-        dailiesList.remove(it)
-    }
-    dailiesList.add(daily)
-}
-
-fun findDaily(dailyId: Int) : DailyVM? {
-    return dailiesList.find { it .id == dailyId }
-}

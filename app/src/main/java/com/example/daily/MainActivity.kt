@@ -26,6 +26,7 @@ import com.example.daily.presentations.details.DetailDailyScreen
 import com.example.daily.presentations.list.ListDailiesScreen
 import com.example.daily.presentations.list.ListDailiesViewModel
 import com.example.daily.presentations.navigation.Screen
+import com.example.daily.presentations.splashscreen.SplashScreen
 import com.example.daily.ui.theme.HelloWorldTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -81,9 +82,12 @@ class MainActivity : ComponentActivity() {
 
                     NavHost(
                         navController = navController,
-                        startDestination = Screen.DailiesListScreen.route,
+                        startDestination = Screen.SplashScreen.route,
                         modifier = Modifier.padding()
                     ) {
+                        composable(Screen.SplashScreen.route) {
+                            SplashScreen(navController)
+                        }
                         composable(Screen.DailiesListScreen.route) {
                             ListDailiesScreen(navController)
                         }

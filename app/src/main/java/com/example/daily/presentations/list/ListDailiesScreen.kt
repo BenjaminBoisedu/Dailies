@@ -189,7 +189,6 @@ fun ListDailiesScreen(navController: NavController, viewModel: ListDailiesViewMo
                             scope.launch { snackbarHostState.showSnackbar("Routine supprimée")
                             }},
                             onEditClick = { navController.navigate(Screen.AddEditDailyScreen.route + "?dailyId=${daily.id}") },
-                            onDetailClick = { navController.navigate(Screen.DetailDailyScreen.route)},
                         )
                     }
                 }
