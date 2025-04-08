@@ -101,6 +101,13 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.play.services.location)
 
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation("com.patrykandpatrick.vico:compose:1.11.1")
+    implementation("com.patrykandpatrick.vico:compose-m3:1.11.1")
+    implementation("com.patrykandpatrick.vico:core:1.11.1")
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
+
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
