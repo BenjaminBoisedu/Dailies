@@ -203,7 +203,6 @@ fun ListDailiesScreen(
                     weatherData?.let { data ->
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
                                 .padding(horizontal = 16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
