@@ -11,6 +11,7 @@ interface DailyAPI {
         @Query("lat") latitude: Double,
         @Query("lon") longitude: Double,
         @Query("units") units: String = "metric",
+        @Query("lang") Lang: String = "fr",
         @Query("appid") apiKey: String
     ): Response<WeatherResponse>
 }
