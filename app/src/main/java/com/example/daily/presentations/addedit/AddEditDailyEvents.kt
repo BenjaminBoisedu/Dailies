@@ -14,7 +14,13 @@ sealed class AddEditDailyEvent {
     data class DailyRecurringChanged(val isRecurring: Boolean) : AddEditDailyEvent()
     data class RecurringTypeSelected(val type: String) : AddEditDailyEvent()
     data class RecurringDaysSelected(val days: List<String>) : AddEditDailyEvent() // Changé de String à List<String>
-    data class LocationSelected(val latitude: Double, val longitude: Double, val locationName: String) : AddEditDailyEvent()
     data class NotificationTimeSelected(val time: String) : AddEditDailyEvent()
     data class RecurringDaysChanged(val day: String) : AddEditDailyEvent()
+
+    // Version unifiée de LocationSelected avec des paramètres nullables
+    data class LocationSelected(
+        val latitude: Double?,
+        val longitude: Double?,
+        val locationName: String?
+    ) : AddEditDailyEvent()
 }

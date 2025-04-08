@@ -5,14 +5,17 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.edit
 import androidx.room.Room
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -23,7 +26,7 @@ import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import androidx.core.content.edit
+
 class NotificationWorker(
     private val context: Context,
     params: WorkerParameters
@@ -66,16 +69,11 @@ class NotificationWorker(
                     val dailyDate = LocalDate.parse(daily.date, DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.getDefault()))
                     val currentDate = LocalDate.now()
 
-
-
                     if (daily.isRecurring && daily.recurringDays?.isNotEmpty() == true) {
-
                         // Obtenir le nom du jour actuel en français
                         val currentDayName = currentDate.dayOfWeek.getDisplayName(
                             java.time.format.TextStyle.FULL, Locale.FRENCH
                         ).lowercase()
-
-
 
                         // Convertir le jour actuel en abréviation
                         val currentDayAbbr = when(currentDayName) {
@@ -96,7 +94,6 @@ class NotificationWorker(
                         Log.d("NotificationWorker", "Analyse de daily: ${daily.title}")
                         Log.d("NotificationWorker", "Jour actuel: $currentDayName ($currentDayAbbr)")
                         Log.d("NotificationWorker", "Jours récurrents (liste nettoyée): $recurringDaysList")
-
 
                         val matches = recurringDaysList.any { day ->
                             Log.d("NotificationWorker", "Comparaison: '$day' vs '$currentDayAbbr'")
@@ -140,7 +137,6 @@ class NotificationWorker(
                             "heure actuelle=${currentMinuteOfDay}, " +
                             "fenêtre=${notificationMinuteOfDay} à ${notificationMinuteOfDay + 5}")
 
-
                     // Check if we're within a 5-minute window of the notification time
                     val shouldNotify = currentMinuteOfDay >= notificationMinuteOfDay &&
                             currentMinuteOfDay <= notificationMinuteOfDay + 15
@@ -148,7 +144,7 @@ class NotificationWorker(
                     // Check if we've already sent this notification today
                     val hasBeenNotified = hasNotificationBeenSent(daily.id ?: 0, daily.date)
 
-                    val willNotify = true && !hasBeenNotified
+                    val willNotify = shouldNotify && !hasBeenNotified
 
                     // Log for debugging
                     if (shouldNotify) {
@@ -241,21 +237,16 @@ class NotificationWorker(
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun sendNotifications(dailies: List<Daily>) {
         Log.d("NotificationWorker", "Sending notifications for ${dailies.size} dailies")
-        Log.d("NotificationWorker", "Permission vérifiée: ${
-            ActivityCompat.checkSelfPermission(
-                applicationContext,
-                android.Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        }")
-            if (true &&
-            ActivityCompat.checkSelfPermission(
+
+        if (ActivityCompat.checkSelfPermission(
                 applicationContext,
                 android.Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.e("NotificationWorker", "Notification permission not granted")
+            Log.d("NotificationWorker", "Permission de notification non accordée")
             return
         }
+
         val notificationManager = NotificationManagerCompat.from(applicationContext)
         val channelId = "daily_notifications"
 
@@ -269,11 +260,9 @@ class NotificationWorker(
 
         dailies.forEach { daily ->
             val emoji = when {
-                daily.done -> "✅"
-                daily.priority == 3 -> "🔴" // High priority
-                daily.priority == 2 -> "🟡" // Medium priority
-                daily.priority == 1 -> "🟢" // Low priority
-                else -> "📝"
+                daily.priority == 2 -> "🔴"
+                daily.priority == 1 -> "🔵"
+                else -> "⚪"
             }
 
             val dateFormatted = daily.date.split("-").joinToString("/")
@@ -286,10 +275,18 @@ class NotificationWorker(
                 "60" -> "1 heure"
                 "120" -> "2 heures"
                 "1440" -> "1 jour"
-                else -> daily.notificationTime
+                else -> "${daily.notificationTime} minutes"
             }
 
-            val contentText = "📝 Rappel: ${daily.title} aura lieu dans $timeDesc - $dateFormatted à $timeFormatted"
+            // Construction du contenu de la notification
+            val contentText = buildString {
+                append("📝 Rappel: ${daily.title} aura lieu dans $timeDesc - $dateFormatted à $timeFormatted")
+
+                // Ajouter des informations de localisation si disponibles
+                if (daily.latitude != null && daily.longitude != null) {
+                    append(" (À effectuer à un emplacement spécifique)")
+                }
+            }
 
             // Create an intent to open the app when notification is clicked
             val intent = applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)
@@ -300,25 +297,42 @@ class NotificationWorker(
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
 
-            val notification = NotificationCompat.Builder(applicationContext, channelId)
+            // Créer le builder de notification
+            val notificationBuilder = NotificationCompat.Builder(applicationContext, channelId)
                 .setSmallIcon(R.drawable.logo)
-                .setContentTitle("$emoji Rappel")
+                .setContentTitle("$emoji Rappel: ${daily.title}")
                 .setContentText(contentText)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
-                .build()
 
-            if (ActivityCompat.checkSelfPermission(
+            // Si nous avons des coordonnées, ajoutons un bouton pour ouvrir Maps
+            if (daily.latitude != null && daily.longitude != null) {
+                // Créer un intent pour ouvrir Google Maps à la position enregistrée
+                val geoUri = Uri.parse("geo:${daily.latitude},${daily.longitude}?q=${daily.latitude},${daily.longitude}(${daily.title})")
+                val mapIntent = Intent(Intent.ACTION_VIEW, geoUri)
+                val mapPendingIntent = PendingIntent.getActivity(
                     applicationContext,
-                    android.Manifest.permission.POST_NOTIFICATIONS                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                notificationManager.notify(daily.id ?: 0, notification)
-                Log.d("NotificationWorker", "Notification sent for: ${daily.title}")
+                    (daily.id ?: 0) + 10000,
+                    mapIntent,
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+
+                // Ajouter un bouton à la notification
+                notificationBuilder.addAction(
+                    R.drawable.logo,  // Utilisez une icône appropriée
+                    "Voir sur la carte",
+                    mapPendingIntent
+                )
             }
+
+            // Envoyer la notification
+            notificationManager.notify(daily.id ?: 0, notificationBuilder.build())
+            Log.d("NotificationWorker", "Notification envoyée pour: ${daily.title}")
         }
     }
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun sendMissedEventNotifications(dailies: List<Daily>) {
         Log.d("NotificationWorker", "Vérification des événements manqués: ${dailies.size} dailies")
@@ -328,7 +342,7 @@ class NotificationWorker(
                 android.Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.e("NotificationWorker", "Permission de notification non accordée")
+            Log.d("NotificationWorker", "Permission de notification non accordée")
             return
         }
 
@@ -351,56 +365,25 @@ class NotificationWorker(
         // Filtrer les événements déjà passés aujourd'hui et non marqués comme done
         val missedEvents = dailies.filter { daily ->
             try {
-                // Vérifier si l'événement est pour aujourd'hui
+                // Vérifier si c'est pour aujourd'hui
                 val dailyDate = LocalDate.parse(daily.date, DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.getDefault()))
                 val currentDate = LocalDate.now()
+                val isToday = dailyDate == currentDate
 
-                // Vérifier si nous sommes le bon jour
-                val isToday = if (daily.isRecurring && daily.recurringDays?.isNotEmpty() == true) {
-                    val currentDayName = currentDate.dayOfWeek.getDisplayName(
-                        java.time.format.TextStyle.FULL, Locale.FRENCH
-                    ).lowercase()
-
-                    val currentDayAbbr = when(currentDayName) {
-                        "lundi" -> "Lu"
-                        "mardi" -> "Ma"
-                        "mercredi" -> "Me"
-                        "jeudi" -> "Je"
-                        "vendredi" -> "Ve"
-                        "samedi" -> "Sa"
-                        "dimanche" -> "Di"
-                        else -> currentDayName
-                    }
-
-                    val cleanedDays = daily.recurringDays.toString().removeSurrounding("[", "]")
-                    val recurringDaysList = cleanedDays.split(",").map { it.trim() }
-
-                    recurringDaysList.any { it == currentDayAbbr }
-                } else {
-                    dailyDate == currentDate
-                }
-
-                if (!isToday || daily.done) {
-                    return@filter false
-                }
-
-                // Calculer l'heure de l'événement en minutes
+                // Récupérer l'heure du daily
                 val dailyTime = daily.time.split(":")
-                val hourMinute = dailyTime[0].toInt() * 60 + dailyTime[1].toInt()
+                val dailyHour = dailyTime[0].toInt()
+                val dailyMinute = dailyTime[1].toInt()
+                val dailyMinuteOfDay = dailyHour * 60 + dailyMinute
 
-                // Vérifier si l'événement est déjà passé
-                val isPassed = currentMinuteOfDay > hourMinute + 15 // On ajoute 15 minutes de marge
+                // Déjà notifié comme manqué?
+                val alreadyNotifiedAsMissed = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
+                    .getBoolean("missed_event_${daily.id}_${daily.date}", false)
 
-                // Vérifier si on a déjà envoyé une notification pour cet événement manqué
-                val notificationKey = "missed_event_${daily.id}_${daily.date}"
-                val hasSentMissedNotification = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
-                    .getBoolean(notificationKey, false)
-
-                Log.d("NotificationWorker", "Événement manqué: ${daily.title}, passé: $isPassed, notif déjà envoyée: $hasSentMissedNotification")
-
-                isPassed && !hasSentMissedNotification
+                // C'est pour aujourd'hui, c'est déjà passé, ce n'est pas fait, et on n'a pas encore notifié
+                isToday && dailyMinuteOfDay < currentMinuteOfDay && !daily.done && !alreadyNotifiedAsMissed
             } catch (e: Exception) {
-                Log.e("NotificationWorker", "Erreur lors de la vérification d'événement manqué: ${daily.title}", e)
+                Log.e("NotificationWorker", "Erreur lors de la vérification des événements manqués", e)
                 false
             }
         }
@@ -411,18 +394,27 @@ class NotificationWorker(
             val dateFormatted = daily.date.split("-").joinToString("/")
             val timeFormatted = daily.time.split(":").take(2).joinToString("h")
 
-            val contentText = "⏰ Événement manqué: ${daily.title} était prévu le $dateFormatted à $timeFormatted"
+            // Construction du contenu de la notification pour les événements manqués
+            val contentText = buildString {
+                append("⏰ Événement manqué: ${daily.title} était prévu le $dateFormatted à $timeFormatted")
+
+                // Ajouter des informations de localisation si disponibles
+                if (daily.latitude != null && daily.longitude != null) {
+                    append(" (À effectuer à un emplacement spécifique)")
+                }
+            }
 
             // Créer une intention pour ouvrir l'application au clic sur la notification
             val intent = applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)
             val pendingIntent = PendingIntent.getActivity(
                 applicationContext,
-                (daily.id ?: 0) + 10000, // Différencier des IDs normaux
+                (daily.id ?: 0) + 20000,
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
 
-            val notification = NotificationCompat.Builder(applicationContext, channelId)
+            // Créer le builder de notification
+            val notificationBuilder = NotificationCompat.Builder(applicationContext, channelId)
                 .setSmallIcon(R.drawable.logo)
                 .setContentTitle("⏰ Événement manqué")
                 .setContentText(contentText)
@@ -430,20 +422,34 @@ class NotificationWorker(
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
-                .build()
 
-            if (ActivityCompat.checkSelfPermission(
+            // Si nous avons des coordonnées, ajoutons un bouton pour ouvrir Maps
+            if (daily.latitude != null && daily.longitude != null) {
+                // Créer un intent pour ouvrir Google Maps à la position enregistrée
+                val geoUri = Uri.parse("geo:${daily.latitude},${daily.longitude}?q=${daily.latitude},${daily.longitude}(${daily.title})")
+                val mapIntent = Intent(Intent.ACTION_VIEW, geoUri)
+                val mapPendingIntent = PendingIntent.getActivity(
                     applicationContext,
-                    android.Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                notificationManager.notify((daily.id ?: 0) + 10000, notification)
-                Log.d("NotificationWorker", "Notification d'événement manqué envoyée pour: ${daily.title}")
+                    (daily.id ?: 0) + 30000,
+                    mapIntent,
+                    PendingIntent.FLAG_IMMUTABLE
+                )
 
-                // Marquer cette notification comme envoyée
-                context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE).edit {
-                    putBoolean("missed_event_${daily.id}_${daily.date}", true)
-                }
+                // Ajouter un bouton à la notification
+                notificationBuilder.addAction(
+                    R.drawable.logo,  // Utilisez une icône appropriée
+                    "Voir sur la carte",
+                    mapPendingIntent
+                )
+            }
+
+            // Envoyer la notification
+            notificationManager.notify((daily.id ?: 0) + 10000, notificationBuilder.build())
+            Log.d("NotificationWorker", "Notification d'événement manqué envoyée pour: ${daily.title}")
+
+            // Marquer cette notification comme envoyée
+            context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE).edit {
+                putBoolean("missed_event_${daily.id}_${daily.date}", true)
             }
         }
     }

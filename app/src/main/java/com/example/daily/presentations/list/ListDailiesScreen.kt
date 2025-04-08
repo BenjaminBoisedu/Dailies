@@ -52,12 +52,28 @@ import com.example.daily.R
 import com.example.daily.presentations.components.DailyCard
 import com.example.daily.presentations.navigation.Screen
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.LocationOn
+import com.example.daily.sensor.LocationViewModel
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 
 @SuppressLint("MutableCollectionMutableState", "CoroutineCreationDuringComposition",
     "SuspiciousIndentation"
 )
 @Composable
-fun ListDailiesScreen(navController: NavController, viewModel: ListDailiesViewModel  = hiltViewModel()) {
+fun ListDailiesScreen(navController: NavController, viewModel: ListDailiesViewModel  = hiltViewModel(), locationViewModel: LocationViewModel = hiltViewModel()
+) {
+
+    val location by locationViewModel.currentLocation.collectAsState()
+
+    DisposableEffect(key1 = true) {
+        locationViewModel.startLocationUpdates()
+        onDispose {
+            locationViewModel.stopLocationUpdates()
+        }
+    }
+
+    var filterByLocation by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -157,6 +173,27 @@ fun ListDailiesScreen(navController: NavController, viewModel: ListDailiesViewMo
                                 leadingIcon = {
                                     Icon(
                                         imageVector = Icons.Default.Info,
+                                        contentDescription = null,
+                                        tint = Color.White
+                                    )
+                                },
+                                colors = MenuItemColors(
+                                    textColor = Color.White,
+                                    leadingIconColor = Color.White,
+                                    trailingIconColor = Color.White,
+                                    disabledTextColor = Color.White,
+                                    disabledLeadingIconColor = Color.White,
+                                    disabledTrailingIconColor = Color.White,
+                                )
+                            )
+                            // Dans le DropdownMenu, après l'option "A propos"
+                            DropdownMenuItem(
+                                modifier = Modifier.background(Color.Transparent),
+                                text = { Text("Localisation") },
+                                onClick = { navController.navigate(Screen.LocationScreen.route) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.LocationOn,
                                         contentDescription = null,
                                         tint = Color.White
                                     )

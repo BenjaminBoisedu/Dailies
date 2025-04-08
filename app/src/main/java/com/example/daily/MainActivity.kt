@@ -1,8 +1,10 @@
 package com.example.daily
 
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -20,6 +22,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.room.Room
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.daily.data.source.DailiesDatabase
 import com.example.daily.presentations.addedit.AddEditDailyScreen
 import com.example.daily.presentations.details.DetailDailyScreen
@@ -27,22 +34,62 @@ import com.example.daily.presentations.list.ListDailiesScreen
 import com.example.daily.presentations.list.ListDailiesViewModel
 import com.example.daily.presentations.navigation.Screen
 import com.example.daily.presentations.splashscreen.SplashScreen
+import com.example.daily.sensor.LocationScreen
+import com.example.daily.sensor.LocationViewModel
 import com.example.daily.ui.theme.HelloWorldTheme
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        const val NOTIFICATION_WORK_NAME = "notification_periodic_work"
+        const val NOTIFICATION_IMMEDIATE_WORK_NAME = "notification_immediate_work"
+    }
 
-    private val requestPermissionLauncher = registerForActivityResult(
+    private val requestNotificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Permission granted, schedule notifications
-            scheduleNotificationWorker(applicationContext)
+            // Permission accordée, programmer les notifications
+            NotificationUtils.runNotificationWorkerNow(applicationContext)
+            NotificationUtils.scheduleNotificationWorker(applicationContext)
+            Toast.makeText(
+                this,
+                "Les notifications sont maintenant activées",
+                Toast.LENGTH_SHORT
+            ).show()
         } else {
-            // Permission denied - you could show a message explaining
-            // that notifications won't work
+            // Permission refusée
+            Toast.makeText(
+                this,
+                "Les notifications sont désactivées",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private val locationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineLocationGranted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocationGranted = permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+
+        if (fineLocationGranted || coarseLocationGranted) {
+            // Permissions accordées
+            Toast.makeText(
+                this,
+                "Les fonctionnalités de localisation sont maintenant activées",
+                Toast.LENGTH_SHORT
+            ).show()
+        } else {
+            // Permissions refusées
+            Toast.makeText(
+                this,
+                "Les fonctionnalités de localisation sont désactivées",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -69,10 +116,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         askNotificationPermission()
+        checkAndRequestLocationPermissions()
 
-        runNotificationWorkerNow(applicationContext)
-
-        scheduleNotificationWorker(applicationContext)
+        NotificationUtils.runNotificationWorkerNow(applicationContext)
+        NotificationUtils.scheduleNotificationWorker(applicationContext)
 
         enableEdgeToEdge()
         setContent {
@@ -93,9 +140,10 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Screen.AddEditDailyScreen.route + "?dailyId={dailyId}",
                             arguments = listOf(
-                                navArgument("dailyId")
-                                { type = NavType.IntType
-                                defaultValue = -1}
+                                navArgument("dailyId") {
+                                    type = NavType.IntType
+                                    defaultValue = -1
+                                }
                             )
                         ) {
                             AddEditDailyScreen(navController)
@@ -104,13 +152,48 @@ class MainActivity : ComponentActivity() {
                             val viewModel: ListDailiesViewModel = viewModel()
                             DetailDailyScreen(navController, viewModel)
                         }
+                        composable(Screen.LocationScreen.route) {
+                            val viewModel: LocationViewModel = viewModel()
+                            val hasLocationPermission = hasLocationPermissions()
+                            LocationScreen(
+                                hasLocationPermission = hasLocationPermission,
+                                viewModel = viewModel,
+                                onRequestPermission = {
+                                    checkAndRequestLocationPermissions()
+                                }
+                            )
+                        }
                     }
                 }
             }
         }
     }
+
+    private fun hasLocationPermissions(): Boolean {
+        val fineLocationGranted = ContextCompat.checkSelfPermission(
+            this, android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val coarseLocationGranted = ContextCompat.checkSelfPermission(
+            this, android.Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        return fineLocationGranted || coarseLocationGranted
+    }
+
+    private fun checkAndRequestLocationPermissions() {
+        if (!hasLocationPermissions()) {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
     private fun askNotificationPermission() {
-        // This is only necessary for API level >= 33 (TIRAMISU)
+        // Ceci est nécessaire uniquement pour API level >= 33 (TIRAMISU)
         if (Build.VERSION.SDK_INT >= 33) {  // Build.VERSION_CODES.TIRAMISU = 33
             val postNotificationPermission = "android.permission.POST_NOTIFICATIONS"
 
@@ -119,23 +202,45 @@ class MainActivity : ComponentActivity() {
                     postNotificationPermission
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
-                // Permission is already granted, schedule notifications
-                runNotificationWorkerNow(applicationContext)
-                scheduleNotificationWorker(applicationContext)
+                // Permission déjà accordée, programmer les notifications
+                NotificationUtils.runNotificationWorkerNow(applicationContext)
+                NotificationUtils.scheduleNotificationWorker(applicationContext)
             } else if (shouldShowRequestPermissionRationale(postNotificationPermission)) {
-                // Directly request permission without dialog
-                requestPermissionLauncher.launch(postNotificationPermission)
+                // Demander directement la permission sans dialogue
+                requestNotificationPermissionLauncher.launch(postNotificationPermission)
             } else {
-                // Directly request permission
-                requestPermissionLauncher.launch(postNotificationPermission)
+                // Demander directement la permission
+                requestNotificationPermissionLauncher.launch(postNotificationPermission)
             }
         } else {
-            // For Android < 13, notification permission is granted automatically
-            runNotificationWorkerNow(applicationContext)
-            scheduleNotificationWorker(applicationContext)
+            // Pour Android < 13, la permission de notification est accordée automatiquement
+            NotificationUtils.runNotificationWorkerNow(applicationContext)
+            NotificationUtils.scheduleNotificationWorker(applicationContext)
         }
     }
 }
 
+// Classe d'utilitaires pour gérer les notifications
+object NotificationUtils {
+    fun runNotificationWorkerNow(context: Context) {
+        val workRequest = OneTimeWorkRequestBuilder<NotificationWorker>().build()
 
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            MainActivity.NOTIFICATION_IMMEDIATE_WORK_NAME,
+            ExistingWorkPolicy.REPLACE,
+            workRequest
+        )
+    }
 
+    fun scheduleNotificationWorker(context: Context) {
+        val workRequest = PeriodicWorkRequestBuilder<NotificationWorker>(
+            15, TimeUnit.MINUTES  // Vérifier toutes les 15 minutes
+        ).build()
+
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            MainActivity.NOTIFICATION_WORK_NAME,
+            ExistingPeriodicWorkPolicy.UPDATE,
+            workRequest
+        )
+    }
+}

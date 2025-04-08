@@ -1,6 +1,7 @@
 package com.example.daily.presentations.addedit
 
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,9 +25,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DatePicker
@@ -39,7 +43,10 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Shapes
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableChipColors
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -48,37 +55,34 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.daily.presentations.HighPriority
 import com.example.daily.presentations.StandardPriority
 import com.example.daily.presentations.navigation.Screen
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SelectableChipColors
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.daily.sensor.LocationViewModel
 import kotlinx.coroutines.flow.collectLatest
-import java.util.Calendar
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("InvalidColorHexValue", "RememberReturnType", "CoroutineCreationDuringComposition",
@@ -87,7 +91,8 @@ import java.util.Locale
 @Composable
 fun AddEditDailyScreen(
     navController: NavController,
-    viewModel: AddEditDailyViewModel = hiltViewModel()
+    viewModel: AddEditDailyViewModel = hiltViewModel(),
+    locationViewModel: LocationViewModel = hiltViewModel(),
 ) {
     val listPriority = mapOf(
         StandardPriority to "Standard",
@@ -99,6 +104,7 @@ fun AddEditDailyScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding -> Modifier.padding(padding) }
+
     LaunchedEffect(true) {
         viewModel.eventFlow.collectLatest { event ->
             when (event) {
@@ -111,30 +117,29 @@ fun AddEditDailyScreen(
             }
         }
     }
+
+    // Obtenir la localisation actuelle
+    val currentLocation by locationViewModel.currentLocation.collectAsState()
+
+    // Démarrer la mise à jour de la localisation au chargement de l'écran
+    DisposableEffect(key1 = true) {
+        locationViewModel.startLocationUpdates()
+        onDispose {
+            locationViewModel.stopLocationUpdates()
+        }
+    }
+
     Column (
         Modifier
             .background(Color(0xFF303030))
-            .fillMaxSize (),
+            .fillMaxSize(),
     ) {
-        LaunchedEffect(true) {
-            viewModel.eventFlow.collectLatest { event ->
-                when (event) {
-                    is AddEditDailyUiEvent.SavedDaily -> {
-                        navController.navigate(Screen.DailiesListScreen.route)
-                    }
-                    is AddEditDailyUiEvent.ShowMessage -> {
-                        snackbarHostState.showSnackbar(event.message)
-                    }
-                }
-            }
-        }
         Spacer(modifier = Modifier.height(26.dp))
         Row (
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically
-
         ) {
             FloatingActionButton(
                 onClick = {
@@ -146,7 +151,7 @@ fun AddEditDailyScreen(
                 containerColor = Color(0xFF7684A7),
                 contentColor = Color.Black,
                 elevation = FloatingActionButtonDefaults.elevation(5.dp, 0.dp, 7.dp),
-                shape = Shapes().extraLarge
+                shape = MaterialTheme.shapes.extraLarge
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -179,13 +184,13 @@ fun AddEditDailyScreen(
                         viewModel.onEvent(AddEditDailyEvent.EnteredTitle(it))
                     },
                     modifier = Modifier.fillMaxWidth()
-                        .border(3.dp, Color.White, Shapes().medium),
+                        .border(3.dp, Color.White, MaterialTheme.shapes.medium),
                     colors = TextFieldDefaults.colors(
                         focusedTextColor = Color.Black,
                         errorTextColor = Color(0xFF6E4586),
                     ),
                     singleLine = true,
-                    shape = Shapes().medium
+                    shape = MaterialTheme.shapes.medium
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -197,16 +202,16 @@ fun AddEditDailyScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(180.dp)
-                            .border(8.dp, Color.White, Shapes().medium),
+                            .border(8.dp, Color.White, MaterialTheme.shapes.medium),
                         colors = TextFieldDefaults.colors(
                             focusedTextColor = Color.Black,
                             errorTextColor = Color(0xFF6E4586),
                         ),
                         singleLine = false,
-                        shape = Shapes().medium
+                        shape = MaterialTheme.shapes.medium
                     )
-
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -266,7 +271,7 @@ fun AddEditDailyScreen(
                                     selectedLeadingIconColor = priority.key.foregroundColor,
                                     selectedTrailingIconColor = priority.key.foregroundColor,
                                 ),
-                                shape = Shapes().small,
+                                shape = MaterialTheme.shapes.small,
                                 selected = selectedPriority == priority.key,
                                 modifier = Modifier.padding(8.dp),
                                 leadingIcon = if (selectedPriority == priority.key) {
@@ -275,9 +280,8 @@ fun AddEditDailyScreen(
                                             imageVector = Icons.Filled.Done,
                                             contentDescription = "Done icon",
                                             modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                                .background(Color.Black, Shapes().medium),
+                                                .background(Color.Black, MaterialTheme.shapes.medium),
                                             tint = priority.key.backgroundColor
-
                                         )
                                     }
                                 } else {
@@ -293,7 +297,6 @@ fun AddEditDailyScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
                     var showDatePicker by remember { mutableStateOf(false) }
                     var selectedDate by remember(viewModel.daily.value.date) {
                         mutableStateOf(viewModel.daily.value.date)
@@ -350,7 +353,7 @@ fun AddEditDailyScreen(
                             label = { Text("Date") },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .border(3.dp, Color.White, Shapes().medium),
+                                .border(3.dp, Color.White, MaterialTheme.shapes.medium),
                             readOnly = true,
                             enabled = false,  // Abstractive interaction direct
                             colors = TextFieldDefaults.colors(
@@ -359,7 +362,7 @@ fun AddEditDailyScreen(
                                 disabledLabelColor = Color.Gray,
                                 disabledIndicatorColor = Color.Transparent
                             ),
-                            shape = Shapes().medium,
+                            shape = MaterialTheme.shapes.medium,
                             trailingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.DateRange,
@@ -423,7 +426,7 @@ fun AddEditDailyScreen(
                             label = { Text("Horaire") },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .border(3.dp, Color.White, Shapes().medium),
+                                .border(3.dp, Color.White, MaterialTheme.shapes.medium),
                             readOnly = true,
                             enabled = false,  // Désactive l'interaction directe
                             colors = TextFieldDefaults.colors(
@@ -432,7 +435,7 @@ fun AddEditDailyScreen(
                                 disabledLabelColor = Color.Gray,
                                 disabledIndicatorColor = Color.Transparent
                             ),
-                            shape = Shapes().medium,
+                            shape = MaterialTheme.shapes.medium,
                             trailingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Add,
@@ -510,7 +513,8 @@ fun AddEditDailyScreen(
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
                         text = "Quand recevoir la notification:",
-                        style = MaterialTheme.typography.labelLarge
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.White
                     )
 
                     LazyRow(
@@ -542,13 +546,8 @@ fun AddEditDailyScreen(
                                         Color.Black,
                                     style = MaterialTheme.typography.labelLarge
                                         .copy(
-                                            color = Color.Black
-                                        )
-                                        .copy(
                                             fontSize = 16.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        .copy(
+                                            fontWeight = FontWeight.Bold,
                                             fontFamily = MaterialTheme.typography.headlineMedium.fontFamily
                                         )
                                 )
@@ -556,8 +555,72 @@ fun AddEditDailyScreen(
                         }
                     }
                 }
-                // Après la section "Done"
+
+                // Section Localisation
                 Spacer(modifier = Modifier.height(16.dp))
+
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    Text(
+                        text = "Utiliser la localisation actuelle:",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.White
+                    )
+
+                    // État pour savoir si on utilise la localisation actuelle
+                    var useLocation by remember { mutableStateOf(viewModel.daily.value.latitude != null) }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    ) {
+                        Checkbox(
+                            checked = useLocation,
+                            onCheckedChange = { useLocation = it },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = Color(0xFF99A4BE),
+                                uncheckedColor = Color(0xFF99A4BE)
+                            )
+                        )
+
+                        Text(
+                            text = "Enregistrer ma position actuelle",
+                            fontSize = 16.sp,
+                            color = Color.White.copy(alpha = 0.8f),
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+
+                    // Afficher les coordonnées actuelles si disponibles
+                    if (useLocation && currentLocation != null) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFF404040))
+                                .padding(16.dp)
+                        ) {
+                            Text(
+                                text = "Position actuelle :",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Text(
+                                text = "Lat: ${String.format("%.6f", currentLocation?.latitude)}",
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
+
+                            Text(
+                                text = "Long: ${String.format("%.6f", currentLocation?.longitude)}",
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -585,18 +648,10 @@ fun AddEditDailyScreen(
                         fontFamily = MaterialTheme.typography.headlineMedium.fontFamily
                     )
                     Spacer(modifier = Modifier.width(16.dp))
-                    LaunchedEffect(true) {
-                        viewModel.eventFlow.collectLatest { event ->
-                            when (event) {
-                                is AddEditDailyUiEvent.SavedDaily -> {
-                                    navController.navigate(Screen.DailiesListScreen.route)
-                                }
-                                is AddEditDailyUiEvent.ShowMessage -> {
-                                    snackbarHostState.showSnackbar(event.message)
-                                }
-                            }
-                        }
-                    }
+
+                    // Obtenir l'état actuel pour la case à cocher de localisation
+                    var useLocation by remember { mutableStateOf(viewModel.daily.value.latitude != null) }
+
                     Button(
                         onClick = {
                             when {
@@ -616,6 +671,22 @@ fun AddEditDailyScreen(
                                     viewModel.onEvent(AddEditDailyEvent.SaveDaily) // This will trigger ShowMessage event
                                 }
                                 else -> {
+                                    // Traiter la localisation avant de sauvegarder
+                                    if (useLocation && currentLocation != null) {
+                                        viewModel.onEvent(AddEditDailyEvent.LocationSelected(
+                                            latitude = currentLocation!!.latitude,
+                                            longitude = currentLocation!!.longitude,
+                                            locationName = "Position actuelle"
+                                        ))
+                                    } else {
+                                        // Si on n'utilise pas la localisation, effacer les données existantes
+                                        viewModel.onEvent(AddEditDailyEvent.LocationSelected(
+                                            latitude = null,
+                                            longitude = null,
+                                            locationName = null
+                                        ))
+                                    }
+
                                     viewModel.onEvent(AddEditDailyEvent.SaveDaily)
                                     navController.navigate(Screen.DailiesListScreen.route)
                                 }

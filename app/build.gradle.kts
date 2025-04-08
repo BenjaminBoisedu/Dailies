@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hiltAndroid)
+
+
     kotlin("kapt")
 }
 
@@ -84,6 +86,15 @@ dependencies {
     implementation (libs.androidx.work.runtime.ktx.v281)
     implementation (libs.androidx.core.ktx.v1120)
     androidTestImplementation(libs.androidx.work.testing)
+
+    // Dépendances pour la localisation
+    implementation (libs.play.services.location)
+    implementation(libs.kotlinx.coroutines.play.services)
+
+    // Maps Compose
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
 
     // Testing
     testImplementation(libs.junit)
