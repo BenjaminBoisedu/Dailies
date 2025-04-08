@@ -26,8 +26,10 @@ import androidx.core.content.ContextCompat
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DropdownMenu
@@ -113,21 +115,43 @@ fun ListDailiesScreen(
         Scaffold (
             snackbarHost = { SnackbarHost(snackbarHostState) },
             floatingActionButton = {
-                FloatingActionButton(onClick = {
-                    navController.navigate(Screen.AddEditDailyScreen.route)
-                },
-                    Modifier.padding(16.dp),
-                    containerColor = Color(0xFF7684A7),
-                    contentColor = Color.Black,
-                    elevation = FloatingActionButtonDefaults.elevation(8.dp),
-                    shape = MaterialTheme.shapes.medium,
+                Row (
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    FloatingActionButton(
+                        onClick = {
+                            navController.navigate(Screen.AddEditDailyScreen.route)
+                        },
+                        Modifier.padding(16.dp),
+                        containerColor = Color(0xFF7684A7),
+                        contentColor = Color.Black,
+                        elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                        shape = MaterialTheme.shapes.medium,
 
-                )
+                        )
                     {
-                    Icon(imageVector = Icons.Default.Add,
-                        contentDescription = "Ajouter une routine",)
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Ajouter une routine",
+                        )
+                    }
+                    FloatingActionButton(
+                        onClick = { navController.navigate(Screen.StatsScreen.route) },
+                        containerColor = Color(0xFF99A4BE),
+                        contentColor = Color.White
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.List,
+                            contentDescription = "Statistiques"
+                        )
+                    }
                 }
             }
+
         ) { contentPadding ->
             Column (Modifier
                 .padding(contentPadding)
@@ -178,7 +202,9 @@ fun ListDailiesScreen(
                     }
                     weatherData?.let { data ->
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             // Côté gauche: icône + description
@@ -190,7 +216,8 @@ fun ListDailiesScreen(
                                 AsyncImage(
                                     model = "https://openweathermap.org/img/wn/${data.weather.firstOrNull()?.icon}@4x.png",
                                     contentDescription = "Icône météo",
-                                    modifier = Modifier.size(80.dp)
+                                    modifier = Modifier
+                                        .size(80.dp)
                                         .background(
                                             color = Color(0xFF7684A7),
                                             shape = CircleShape

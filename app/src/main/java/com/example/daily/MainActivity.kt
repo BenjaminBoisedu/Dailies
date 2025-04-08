@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -32,6 +33,7 @@ import com.example.daily.data.source.DailiesDatabase
 import com.example.daily.presentations.addedit.AddEditDailyScreen
 import com.example.daily.presentations.details.DetailDailyScreen
 import com.example.daily.presentations.graph.StatsScreen
+import com.example.daily.presentations.graph.StatsViewModel
 import com.example.daily.presentations.list.ListDailiesScreen
 import com.example.daily.presentations.list.ListDailiesViewModel
 import com.example.daily.presentations.meteo.MeteoScreen
@@ -177,10 +179,12 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(Screen.StatsScreen.route) {
-                            val viewModel: ListDailiesViewModel = viewModel()
+                            val viewModel: ListDailiesViewModel = hiltViewModel()
+                            val statsViewModel: StatsViewModel = hiltViewModel()
                             StatsScreen(
-                                viewModel,
-                                navController = TODO()
+                                viewModel = viewModel,
+                                statsViewModel = statsViewModel,
+                                navController = navController
                             )
                         }
                     }

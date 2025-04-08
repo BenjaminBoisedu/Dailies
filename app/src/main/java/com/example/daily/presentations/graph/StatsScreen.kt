@@ -19,29 +19,39 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.daily.presentations.list.ListDailiesViewModel
+import java.util.SortedMap
 
 @SuppressLint("DefaultLocale")
 @Composable
 fun StatsScreen(
-    viewModel: ListDailiesViewModel = hiltViewModel(),
+    viewModel: ListDailiesViewModel,
+    statsViewModel: StatsViewModel,
     navController: NavController
 ) {
-
-    val statsViewModel: StatsViewModel = hiltViewModel()
-    val statsDataRaw by statsViewModel.statsData.collectAsState()
+    val statsData by statsViewModel.statsData.collectAsState()
     val isLoading by statsViewModel.isLoading.collectAsState()
-    val dailies = viewModel.dailies.value
-    val completedDailies = dailies.filter { it.done }
 
-    // Filtrer les données pour ne garder que celles qui sont complétées
-    val filteredStatsData = statsDataRaw.filterKeys { date ->
-        completedDailies.any { it.date == date }
+    // Fusion des données du ViewModel et des données calculées localement
+    val mergedData = remember(statsData, viewModel.dailies.value) {
+        val dailies = viewModel.dailies.value
+        val completedDailies = dailies.filter { it.done }
+
+        // Combiner les données du repository avec celles calculées localement
+        val completedByDate = completedDailies
+            .groupBy { it.date }
+            .mapValues { entry -> entry.value.size }
+
+        // Fusionner avec les données du StatsViewModel
+        val merged = (statsData.keys + completedByDate.keys).associateWith { date ->
+            val fromStats = statsData[date] ?: 0
+            val fromLocal = completedByDate[date] ?: 0
+            maxOf(fromStats, fromLocal)
+        }
+
+        merged.toSortedMap()
     }
-    val statsData = filteredStatsData.toSortedMap()
-
 
     Column(
         modifier = Modifier
@@ -51,7 +61,8 @@ fun StatsScreen(
     ) {
         // En-tête
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth()
+            .padding(top = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -62,7 +73,7 @@ fun StatsScreen(
                 fontWeight = FontWeight.Bold
             )
 
-            IconButton(onClick = { navController.navigateUp() }) {
+            IconButton(onClick = { navController.popBackStack() }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Retour",
@@ -73,11 +84,11 @@ fun StatsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (isLoading) {
+        if (isLoading && mergedData.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = Color(0xFF99A4BE))
             }
-        } else if (statsData.isEmpty()) {
+        } else if (mergedData.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     text = "Aucune routine complétée pour le moment",
@@ -86,84 +97,92 @@ fun StatsScreen(
                 )
             }
         } else {
-            // Graphique avec Compose Canvas
-            Card(
+            // Contenu des statistiques
+            StatsContent(data = mergedData)
+        }
+    }
+}
+
+@Composable
+fun StatsContent(data: SortedMap<String, Int>) {
+    Column {
+        // Graphique avec Compose Canvas
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF303030))
+        ) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF303030))
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "Routines complétées par jour",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
+                Text(
+                    text = "Routines complétées par jour",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                    SimpleBarChart(
-                        data = statsData,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(220.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Résumé des statistiques
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF303030))
-            ) {
-                Column(
+                SimpleBarChart(
+                    data = data,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "Résumé",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
+                        .height(220.dp)
+                )
+            }
+        }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-                    val totalCompleted = statsData.values.sum()
-                    val bestDay = statsData.maxByOrNull { it.value }
-                    val averagePerDay = if (statsData.isNotEmpty()) {
-                        statsData.values.sum().toFloat() / statsData.size
-                    } else 0f
+        // Résumé des statistiques
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF303030))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Résumé",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                val totalCompleted = data.values.sum()
+                val bestDay = data.maxByOrNull { it.value }
+                val averagePerDay = if (data.isNotEmpty()) {
+                    data.values.sum().toFloat() / data.size
+                } else 0f
+
+                StatItem(
+                    title = "Total des routines complétées",
+                    value = totalCompleted.toString()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                bestDay?.let {
                     StatItem(
-                        title = "Total des routines complétées",
-                        value = totalCompleted.toString()
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    bestDay?.let {
-                        StatItem(
-                            title = "Meilleur jour",
-                            value = "${it.key} (${it.value} routines)"
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    StatItem(
-                        title = "Moyenne par jour",
-                        value = String.format("%.1f", averagePerDay)
+                        title = "Meilleur jour",
+                        value = "${it.key} (${it.value} routines)"
                     )
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                StatItem(
+                    title = "Moyenne par jour",
+                    value = String.format("%.1f", averagePerDay)
+                )
             }
         }
     }
