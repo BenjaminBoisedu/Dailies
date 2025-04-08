@@ -15,23 +15,56 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.random.Random
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @HiltViewModel
 class ListDailiesViewModel @Inject constructor(
     private val dailiesUseCases: DailiesUseCases
 ) : ViewModel() {
+    // Listes séparées pour les tâches complétées et non complétées
+    private val _completedDailies: MutableState<List<DailyVM>> = mutableStateOf(emptyList())
+    val completedDailies: State<List<DailyVM>> = _completedDailies
+
+    private val _pendingDailies: MutableState<List<DailyVM>> = mutableStateOf(emptyList())
+    val pendingDailies: State<List<DailyVM>> = _pendingDailies
+
+    // Conserver cette propriété pour la compatibilité
     private val _dailies: MutableState<List<DailyVM>> = mutableStateOf(emptyList())
     var dailies: State<List<DailyVM>> = _dailies
+
     private var job: Job? = null
 
     init {
-       loadDailies()
+        loadDailies()
     }
 
     private fun loadDailies() {
         job?.cancel()
         job = dailiesUseCases.getDailies().onEach { dailies ->
-            _dailies.value = dailies.map { DailyVM.fromEntity(it) }
+            val allDailies = dailies.map { DailyVM.fromEntity(it) }
+
+            // Fonction de tri chronologique
+            val sortByDate: (DailyVM) -> Long = { daily ->
+                try {
+                    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                    formatter.parse(daily.date)?.time ?: 0
+                } catch (e: Exception) {
+                    0
+                }
+            }
+
+            // Séparer et trier les deux listes
+            _pendingDailies.value = allDailies
+                .filter { !it.done }
+                .sortedByDescending(sortByDate)
+
+            _completedDailies.value = allDailies
+                .filter { it.done }
+                .sortedByDescending(sortByDate)
+
+            // Maintenir la liste complète pour la compatibilité
+            _dailies.value = _pendingDailies.value + _completedDailies.value
         }.launchIn(viewModelScope)
     }
 

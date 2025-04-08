@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface DailiesDao {
 
-    @Query("SELECT * FROM dailies")
+    @Query("SELECT * FROM dailies ORDER BY SUBSTR(date, 7, 4) || SUBSTR(date, 4, 2) || SUBSTR(date, 1, 2) ASC")
     fun getDailies() : Flow<List<Daily>>
 
     @Query("SELECT * FROM dailies WHERE id = :id")
