@@ -74,6 +74,7 @@ import com.example.daily.sensor.LocationViewModel
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.daily.presentations.meteo.MeteoViewModel
 import com.google.maps.android.compose.Circle
@@ -369,7 +370,7 @@ fun ListDailiesScreen(
 
                 }
 
-                LazyColumn (
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(8.dp),
@@ -377,13 +378,31 @@ fun ListDailiesScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     contentPadding = PaddingValues(16.dp)
                 ) {
-                    items(viewModel.dailies.value) { daily ->
-                        DailyCard(daily = daily, onDeleteClick = {
-                            viewModel.onEvent(DailyEvent.Delete(daily))
-                            scope.launch { snackbarHostState.showSnackbar("Routine supprimée")
-                            }},
-                            onEditClick = { navController.navigate(Screen.AddEditDailyScreen.route + "?dailyId=${daily.id}") },
-                        )
+                    // Section des tâches à faire
+                    if (viewModel.pendingDailies.value.isNotEmpty()) {
+                        items(viewModel.pendingDailies.value) { daily ->
+                            DailyCard(
+                                daily = daily,
+                                onDeleteClick = {
+                                    viewModel.onEvent(DailyEvent.Delete(daily))
+                                    scope.launch { snackbarHostState.showSnackbar("Routine supprimée") }
+                                },
+                                onEditClick = { navController.navigate(Screen.AddEditDailyScreen.route + "?dailyId=${daily.id}") }
+                            )
+                        }
+                    }
+
+                    if (viewModel.completedDailies.value.isNotEmpty()){
+                        items(viewModel.completedDailies.value) { daily ->
+                            DailyCard(
+                                daily = daily,
+                                onDeleteClick = {
+                                    viewModel.onEvent(DailyEvent.Delete(daily))
+                                    scope.launch { snackbarHostState.showSnackbar("Routine supprimée") }
+                                },
+                                onEditClick = { navController.navigate(Screen.AddEditDailyScreen.route + "?dailyId=${daily.id}") }
+                            )
+                        }
                     }
                 }
             }
