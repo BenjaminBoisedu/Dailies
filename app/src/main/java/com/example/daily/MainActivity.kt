@@ -68,6 +68,7 @@ class MainActivity : ComponentActivity() {
                 Toast.LENGTH_LONG
             ).show()
         }
+        askLocalisationPermission()
     }
 
     private val locationPermissionLauncher = registerForActivityResult(
@@ -116,10 +117,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         askNotificationPermission()
-        checkAndRequestLocationPermissions()
 
-        NotificationUtils.runNotificationWorkerNow(applicationContext)
-        NotificationUtils.scheduleNotificationWorker(applicationContext)
+        enableEdgeToEdge()
 
         enableEdgeToEdge()
         setContent {
@@ -205,17 +204,45 @@ class MainActivity : ComponentActivity() {
                 // Permission déjà accordée, programmer les notifications
                 NotificationUtils.runNotificationWorkerNow(applicationContext)
                 NotificationUtils.scheduleNotificationWorker(applicationContext)
+
+                // Passer à la demande de localisation
+                askLocalisationPermission()
             } else if (shouldShowRequestPermissionRationale(postNotificationPermission)) {
-                // Demander directement la permission sans dialogue
+                // Demander la permission de notification
                 requestNotificationPermissionLauncher.launch(postNotificationPermission)
+                // Ne pas appeler askLocalisationPermission() ici car elle sera appelée dans le callback
             } else {
-                // Demander directement la permission
+                // Demander la permission de notification
                 requestNotificationPermissionLauncher.launch(postNotificationPermission)
+                // Ne pas appeler askLocalisationPermission() ici car elle sera appelée dans le callback
             }
         } else {
-            // Pour Android < 13, la permission de notification est accordée automatiquement
+            // Pour les versions < Android 13, pas besoin de permission pour les notifications
             NotificationUtils.runNotificationWorkerNow(applicationContext)
             NotificationUtils.scheduleNotificationWorker(applicationContext)
+
+            // Passer directement à la demande de localisation
+            askLocalisationPermission()
+        }
+    }
+
+    private fun askLocalisationPermission() {
+        val fineLocationPermission = android.Manifest.permission.ACCESS_FINE_LOCATION
+        val coarseLocationPermission = android.Manifest.permission.ACCESS_COARSE_LOCATION
+
+        if (ContextCompat.checkSelfPermission(this, fineLocationPermission) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(this, coarseLocationPermission) != PackageManager.PERMISSION_GRANTED
+        ) {
+            locationPermissionLauncher.launch(
+                arrayOf(fineLocationPermission, coarseLocationPermission)
+            )
+        } else {
+            // Les permissions de localisation sont déjà accordées
+            Toast.makeText(
+                this,
+                "Les fonctionnalités de localisation sont déjà activées",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 }
