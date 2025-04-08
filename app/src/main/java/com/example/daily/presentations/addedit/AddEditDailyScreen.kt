@@ -86,7 +86,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("InvalidColorHexValue", "RememberReturnType", "CoroutineCreationDuringComposition",
-    "SuspiciousIndentation"
+    "SuspiciousIndentation", "DefaultLocale"
 )
 @Composable
 fun AddEditDailyScreen(

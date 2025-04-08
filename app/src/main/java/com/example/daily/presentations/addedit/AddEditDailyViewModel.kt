@@ -1,7 +1,9 @@
 package com.example.daily.presentations.addedit
 
-
+import android.Manifest
+import android.location.Location
 import android.util.Log
+import androidx.annotation.RequiresPermission
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
@@ -12,6 +14,7 @@ import com.example.daily.presentations.PriorityType
 import com.example.daily.presentations.addedit.AddEditDailyUiEvent.*
 import com.example.daily.presentations.list.DailyVM
 import com.example.daily.presentations.list.toEntity
+import com.example.daily.sensor.LocationViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -42,21 +45,46 @@ class AddEditDailyViewModel @Inject constructor(
         isRecurring = false,
         recurringType = null,
         recurringDays = emptyList(),
-        notificationTime = null
+        notificationTime = "30" // Valeur par défaut à 30 minutes
     ))
     val daily: State<DailyVM> = _daily
 
     private val _eventFlow = MutableSharedFlow<AddEditDailyUiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
+    // Variable pour suivre si l'utilisateur a choisi d'utiliser la localisation
+    private val _useLocation = mutableStateOf(false)
+
+
+    // Variable pour stocker la dernière position connue
+    private val _currentLocation = mutableStateOf<Location?>(null)
+
     init {
         val dailyId = savedStateHandle.get<Int>("dailyId") ?: -1
+        Log.d(TAG, "Initialisation avec dailyId: $dailyId")
+
         if (dailyId != -1) {
             viewModelScope.launch {
+                Log.d(TAG, "Chargement des données pour dailyId: $dailyId")
                 dailiesUseCases.editDaily.getDaily(dailyId).collect { daily ->
-                    if (daily != null) {
+                    if (true) {
                         // Convertir recurringDays de String à List<String> en gérant le cas null
                         val recurringDaysList = daily.recurringDays?.split(",")?.filter { day -> day.isNotEmpty() } ?: emptyList()
+
+                        Log.d(TAG, "Données chargées avec succès: ${daily.title}")
+                        Log.d(TAG, "Latitude: ${daily.latitude}, Longitude: ${daily.longitude}, Nom: ${daily.locationName}")
+                        Log.d(TAG, "Jours récurrents: ${daily.recurringDays} -> $recurringDaysList")
+
+                        // Si nous avons des coordonnées de localisation, activer l'option useLocation
+                        _useLocation.value = daily.latitude != null && daily.longitude != null
+
+                        // Si des coordonnées existent, créer une Location
+                        if (daily.latitude != null && daily.longitude != null) {
+                            val location = Location("DATABASE")
+                            location.latitude = daily.latitude
+                            location.longitude = daily.longitude
+                            _currentLocation.value = location
+                        }
 
                         _daily.value = DailyVM(
                             id = daily.id ?: -1,
@@ -80,7 +108,24 @@ class AddEditDailyViewModel @Inject constructor(
                     }
                 }
             }
+        } else {
+            Log.d(TAG, "Création d'une nouvelle daily")
         }
+    }
+
+    // Méthode pour mettre à jour les données de localisation dans le ViewModel
+    private fun updateLocationData(location: Location) {
+        Log.d(TAG, "Mise à jour des données de localisation dans le ViewModel")
+
+        _daily.value = _daily.value.copy(
+            latitude = location.latitude,
+            longitude = location.longitude,
+            locationName = "Position actuelle"  // Valeur par défaut
+        )
+
+        Log.d(TAG, "Données de localisation mises à jour: " +
+                "Latitude=${String.format("%.6f", location.latitude)}, " +
+                "Longitude=${String.format("%.6f", location.longitude)}")
     }
 
     fun onEvent(event: AddEditDailyEvent) {
@@ -110,6 +155,15 @@ class AddEditDailyViewModel @Inject constructor(
                 Log.d(TAG, "Priorité sélectionnée: ${event.priority}")
                 _daily.value = _daily.value.copy(priority = event.priority)
             }
+
+            // Sauvegarde de la localisation
+            is AddEditDailyEvent.LocationSelected -> {
+                Log.d(TAG, "Localisation sélectionnée manuellement: latitude=${event.latitude}, longitude=${event.longitude}, nom=${event.locationName}")
+                // Mettre à jour l'état useLocation en fonction des données reçues
+                _useLocation.value = event.latitude != null && event.longitude != null
+            }
+
+
             AddEditDailyEvent.SaveDaily -> {
                 Log.d(TAG, "Tentative de sauvegarde de la daily")
 
@@ -125,35 +179,66 @@ class AddEditDailyViewModel @Inject constructor(
                     currentDaily
                 }
 
+                // Si l'utilisateur a activé l'utilisation de la localisation et que nous avons une localisation actuelle
+                // Mettre à jour les coordonnées depuis le capteur
+                val finalDaily = if (_useLocation.value && _currentLocation.value != null) {
+                    val location = _currentLocation.value!!
+                    Log.d(TAG, "Utilisation de la localisation du capteur pour la sauvegarde: " +
+                            "Latitude=${String.format("%.6f", location.latitude)}, " +
+                            "Longitude=${String.format("%.6f", location.longitude)}")
+
+                    updatedDaily.copy(
+                        latitude = location.latitude,
+                        longitude = location.longitude,
+                        locationName = "Position actuelle"
+                    )
+                } else if (!_useLocation.value) {
+                    // Si l'utilisateur a désactivé la localisation, supprimer les coordonnées
+                    Log.d(TAG, "Localisation désactivée, suppression des coordonnées")
+                    updatedDaily.copy(
+                        latitude = null,
+                        longitude = null,
+                        locationName = null
+                    )
+                } else {
+                    updatedDaily
+                }
+
                 // Mettre à jour l'état si changé
-                if (updatedDaily != currentDaily) {
-                    _daily.value = updatedDaily
+                if (finalDaily != _daily.value) {
+                    _daily.value = finalDaily
                 }
 
                 Log.d(TAG, "Détails complets de la daily à sauvegarder: \n" +
-                        "ID: ${updatedDaily.id}\n" +
-                        "Titre: ${updatedDaily.title}\n" +
-                        "Description: ${updatedDaily.description}\n" +
-                        "Date: ${updatedDaily.date}\n" +
-                        "Heure: ${updatedDaily.time}\n" +
-                        "Priorité: ${updatedDaily.priority}\n" +
-                        "Terminée: ${updatedDaily.done}\n" +
-                        "Est récurrente: ${updatedDaily.isRecurring}\n" +
-                        "Type de récurrence: ${updatedDaily.recurringType}\n" +
-                        "Jours de récurrence: ${updatedDaily.recurringDays}\n" +
-                        "Heure de notification: ${updatedDaily.notificationTime}")
+                        "ID: ${finalDaily.id}\n" +
+                        "Titre: ${finalDaily.title}\n" +
+                        "Description: ${finalDaily.description}\n" +
+                        "Date: ${finalDaily.date}\n" +
+                        "Heure: ${finalDaily.time}\n" +
+                        "Priorité: ${finalDaily.priority}\n" +
+                        "Terminée: ${finalDaily.done}\n" +
+                        "Est récurrente: ${finalDaily.isRecurring}\n" +
+                        "Type de récurrence: ${finalDaily.recurringType}\n" +
+                        "Jours de récurrence: ${finalDaily.recurringDays}\n" +
+                        "Heure de notification: ${finalDaily.notificationTime}\n" +
+                        "Latitude: ${finalDaily.latitude}\n" +
+                        "Longitude: ${finalDaily.longitude}\n" +
+                        "Nom du lieu: ${finalDaily.locationName}")
+
                 viewModelScope.launch {
-                    if (daily.value.title.isEmpty() || daily.value.description?.isEmpty() != false ||
-                        daily.value.date.isEmpty() || daily.value.time.isEmpty() ||
-                        daily.value.priority == null
+                    if (finalDaily.title.isEmpty() || finalDaily.description?.isEmpty() != false ||
+                        finalDaily.date.isEmpty() || finalDaily.time.isEmpty() ||
+                        finalDaily.priority == null
                     ) {
                         Log.e(TAG, "Échec de sauvegarde: champs obligatoires non remplis")
                         _eventFlow.emit(ShowMessage("Unable to save daily"))
                         return@launch
                     }
 
-                    daily.value.toEntity().let { entity ->
+                    finalDaily.toEntity().let { entity ->
                         Log.d(TAG, "Sauvegarde de la daily: ${entity.title}, ID=${entity.id}, date=${entity.date}")
+                        Log.d(TAG, "Données de localisation: lat=${entity.latitude}, long=${entity.longitude}, nom=${entity.locationName}")
+
                         withContext(Dispatchers.IO) {
                             if (entity.id != null) {
                                 Log.d(TAG, "Mise à jour de la daily existante (ID=${entity.id})")
@@ -165,59 +250,19 @@ class AddEditDailyViewModel @Inject constructor(
                         }
                         Log.d(TAG, "Daily sauvegardée avec succès")
                         _eventFlow.emit(SavedDaily)
-                        Log.d(TAG, "Daily sauvegardée avec succès. Détails finaux: \n" +
-                                "ID: ${entity.id}\n" +
-                                "Titre: ${entity.title}\n" +
-                                "Description: ${entity.description}\n" +
-                                "Date: ${entity.date}\n" +
-                                "Heure: ${entity.time}\n" +
-                                "Priorité: ${entity.priority}\n" +
-                                "Terminée: ${entity.done}\n" +
-                                "Est récurrente: ${entity.isRecurring}\n" +
-                                "Type de récurrence: ${entity.recurringType}\n" +
-                                "Jours de récurrence: ${entity.recurringDays}\n" +
-                                "Heure de notification: ${entity.notificationTime}")
                     }
-
                 }
             }
-            is AddEditDailyEvent.RecurringTypeSelected -> {
-                // Si il y a plusieurs jours de récurrence alors on est en weekly
-                // sinon on est en daily
-                val type = if (_daily.value.recurringDays.size > 1) "weekly" else "daily"
-                Log.d(TAG, "Type de récurrence déterminé automatiquement: $type")
 
-                // Mettre à jour le type de récurrence et définir isRecurring comme true
-                _daily.value = _daily.value.copy(
-                    recurringType = type,
-                    isRecurring = true  // Mettre à true quand un type est sélectionné
-                )
-            }
-            is AddEditDailyEvent.RecurringDaysSelected -> {
-                Log.d(TAG, "Jours de récurrence sélectionnés: ${event.days}")
-                // Supposons que event.days est également mis à jour pour être une List<String>
-                _daily.value = _daily.value.copy(recurringDays = event.days)
-            }
-
-            is AddEditDailyEvent.LocationSelected -> {
-                Log.d(TAG, "Localisation sélectionnée: latitude=${event.latitude}, longitude=${event.longitude}, nom=${event.locationName}")
-                _daily.value = _daily.value.copy(
-                    latitude = event.latitude,
-                    longitude = event.longitude,
-                    locationName = event.locationName
-                )
-            }
             is AddEditDailyEvent.NotificationTimeSelected -> {
                 Log.d(TAG, "Heure de notification sélectionnée: ${event.time}")
                 _daily.value = _daily.value.copy(notificationTime = event.time)
             }
-
             is AddEditDailyEvent.RecurringDaysChanged -> {
                 val day = event.day
                 Log.d(TAG, "Jour récurrent modifié: $day")
 
                 // Créer une nouvelle liste à partir de la liste actuelle
-                // Assurez-vous qu'elle soit plate (pas de liste imbriquée)
                 val currentDays = _daily.value.recurringDays.toMutableList()
                 Log.d(TAG, "Jours récurrents actuels (avant modification): $currentDays")
 
@@ -256,18 +301,57 @@ class AddEditDailyViewModel @Inject constructor(
 
                 Log.d(TAG, "État final des jours récurrents: ${_daily.value.recurringDays}")
             }
-
             is AddEditDailyEvent.DailyRecurringChanged -> {
                 Log.d(TAG, "État de récurrence modifié: ${event.isRecurring}")
                 _daily.value = _daily.value.copy(isRecurring = event.isRecurring)
             }
+            is AddEditDailyEvent.RecurringTypeSelected -> {
+                // Si il y a plusieurs jours de récurrence alors on est en weekly
+                // sinon on est en daily
+                val type = if (_daily.value.recurringDays.size > 1) "weekly" else "daily"
+                Log.d(TAG, "Type de récurrence déterminé automatiquement: $type")
+
+                // Mettre à jour le type de récurrence et définir isRecurring comme true
+                _daily.value = _daily.value.copy(
+                    recurringType = type,
+                    isRecurring = true  // Mettre à true quand un type est sélectionné
+                )
+            }
+            is AddEditDailyEvent.RecurringDaysSelected -> {
+                Log.d(TAG, "Jours de récurrence sélectionnés: ${event.days}")
+                _daily.value = _daily.value.copy(recurringDays = event.days)
+            }
+        }
+    }
+
+    // Méthode pour mettre à jour l'état d'utilisation de la localisation
+    fun setUseLocationState(useLocation: Boolean) {
+        Log.d(TAG, "Changement du statut d'utilisation de la localisation: $useLocation")
+        _useLocation.value = useLocation
+
+        // Si on active la localisation et qu'on a déjà une position, la mettre à jour immédiatement
+        if (useLocation && _currentLocation.value != null) {
+            Log.d(TAG, "Mise à jour immédiate avec la localisation actuelle du capteur")
+            updateLocationData(_currentLocation.value!!)
+        }
+        // Si on désactive la localisation, effacer les données de localisation
+        else if (!useLocation) {
+            Log.d(TAG, "Effacement des données de localisation")
+            _daily.value = _daily.value.copy(
+                latitude = null,
+                longitude = null,
+                locationName = null
+            )
         }
     }
 }
+
+
 sealed interface AddEditDailyUiEvent {
     data class ShowMessage(val message: String) : AddEditDailyUiEvent
     data object SavedDaily : AddEditDailyUiEvent
 }
+
 private fun Int.toPriorityType(): PriorityType {
     return PriorityType.fromInt(this)
 }

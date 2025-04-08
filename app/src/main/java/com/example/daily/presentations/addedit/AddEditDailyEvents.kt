@@ -23,4 +23,5 @@ sealed class AddEditDailyEvent {
         val longitude: Double?,
         val locationName: String?
     ) : AddEditDailyEvent()
+
 }

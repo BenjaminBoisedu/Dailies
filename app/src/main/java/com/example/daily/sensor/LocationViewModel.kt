@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Looper
 import android.util.Log
+import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,10 +18,12 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
+import kotlinx.coroutines.flow.filterNotNull
 
 @HiltViewModel
 class LocationViewModel @Inject constructor(
@@ -107,6 +110,28 @@ class LocationViewModel @Inject constructor(
             application,
             Manifest.permission.ACCESS_COARSE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
+    fun getCurrentLocation(): Flow<Location> {
+        if (hasLocationPermission()) {
+            Log.d(TAG, "Récupération de la localisation actuelle")
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { location ->
+                    location?.let {
+                        Log.d(TAG, "Localisation actuelle: ${it.latitude}, ${it.longitude}")
+                        _currentLocation.value = it
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.e(TAG, "Erreur lors de la récupération de la localisation actuelle", e)
+                }
+        } else {
+            Log.d(TAG, "Permissions de localisation non accordées")
+        }
+
+        // Utilisez filterNotNull() pour transformer StateFlow<Location?> en Flow<Location>
+        return _currentLocation.asStateFlow().filterNotNull()
     }
 
     override fun onCleared() {
