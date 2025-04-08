@@ -168,14 +168,15 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(Screen.MeteoScreen.route) {
-                            val viewModel: MeteoViewModel = viewModel()
+                            val meteoviewmodel: MeteoViewModel = viewModel()
                             val hasLocationPermission = hasLocationPermissions()
                             MeteoScreen(
                                 hasLocationPermission = hasLocationPermission,
                                 onRequestPermission = {
                                     checkAndRequestLocationPermissions()
                                 },
-                                viewModel = viewModel
+                                meteoviewmodel = meteoviewmodel,
+                                navController = navController
                             )
                         }
                         composable(Screen.StatsScreen.route) {

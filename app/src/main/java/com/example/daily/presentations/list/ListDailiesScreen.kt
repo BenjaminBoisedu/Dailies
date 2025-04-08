@@ -168,7 +168,7 @@ fun ListDailiesScreen(
                 Row (modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
-                    .height(105.dp)
+                    .height(110.dp)
                     .background(color = Color(0xFF303030)),
                 ) {
                     if (weatherData == null && error == null && !isLoading) {
@@ -207,7 +207,6 @@ fun ListDailiesScreen(
                                 .padding(horizontal = 16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Côté gauche: icône + description
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center,  // Centrage vertical ajouté
@@ -335,26 +334,6 @@ fun ListDailiesScreen(
                                 modifier = Modifier.background(Color.Transparent),
                                 text = { Text("Localisation") },
                                 onClick = { navController.navigate(Screen.LocationScreen.route) },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.LocationOn,
-                                        contentDescription = null,
-                                        tint = Color.White
-                                    )
-                                },
-                                colors = MenuItemColors(
-                                    textColor = Color.White,
-                                    leadingIconColor = Color.White,
-                                    trailingIconColor = Color.White,
-                                    disabledTextColor = Color.White,
-                                    disabledLeadingIconColor = Color.White,
-                                    disabledTrailingIconColor = Color.White,
-                                )
-                            )
-                            DropdownMenuItem(
-                                modifier = Modifier.background(Color.Transparent),
-                                text = { Text("Météo") },
-                                onClick = { navController.navigate(Screen.MeteoScreen.route) },
                                 leadingIcon = {
                                     Icon(
                                         imageVector = Icons.Default.LocationOn,
