@@ -22,6 +22,11 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.daily.presentations.list.ListDailiesViewModel
 import java.util.SortedMap
+import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -62,7 +67,7 @@ fun StatsScreen(
         // En-tête
         Row(
             modifier = Modifier.fillMaxWidth()
-            .padding(top = 16.dp),
+            .padding(top = 25.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -77,7 +82,8 @@ fun StatsScreen(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Retour",
-                    tint = Color.White
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
@@ -171,10 +177,14 @@ fun StatsContent(data: SortedMap<String, Int>) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                val currentDate = LocalDate.now()
+                val formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.getDefault())
+                val formattedDate = currentDate.format(formatter)
+
                 bestDay?.let {
                     StatItem(
                         title = "Meilleur jour",
-                        value = "${it.key} (${it.value} routines)"
+                        value = "$formattedDate : ${it.value} routines"
                     )
                 }
 
@@ -237,10 +247,13 @@ fun SimpleBarChart(
                     }
                 )
 
+                val currentDate = LocalDate.now()
+                val formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.getDefault())
+                val formattedDate = currentDate.format(formatter)
+
                 // Dessiner les labels des dates en bas
-                val label = entry.key.takeLast(5) // Format court de la date
                 drawContext.canvas.nativeCanvas.drawText(
-                    label,
+                    formattedDate,
                     xOffset + barWidth / 2,
                     size.height + 15,
                     androidx.compose.ui.graphics.Paint().asFrameworkPaint().apply {
@@ -253,6 +266,7 @@ fun SimpleBarChart(
         }
     }
 }
+
 
 @Composable
 fun StatItem(title: String, value: String) {

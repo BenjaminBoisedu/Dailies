@@ -364,27 +364,6 @@ fun ListDailiesScreen(
                                     disabledTrailingIconColor = Color.White,
                                 )
                             )
-                            // Dans le DropdownMenu, après l'option "A propos"
-                            DropdownMenuItem(
-                                modifier = Modifier.background(Color.Transparent),
-                                text = { Text("Localisation") },
-                                onClick = { navController.navigate(Screen.LocationScreen.route) },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.LocationOn,
-                                        contentDescription = null,
-                                        tint = Color.White
-                                    )
-                                },
-                                colors = MenuItemColors(
-                                    textColor = Color.White,
-                                    leadingIconColor = Color.White,
-                                    trailingIconColor = Color.White,
-                                    disabledTextColor = Color.White,
-                                    disabledLeadingIconColor = Color.White,
-                                    disabledTrailingIconColor = Color.White,
-                                )
-                            )
                         }
                     }
 
