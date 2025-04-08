@@ -682,9 +682,6 @@ fun AddEditDailyScreen(
                     )
                     Spacer(modifier = Modifier.width(16.dp))
 
-                    // Obtenir l'état actuel pour la case à cocher de localisation
-                    var useLocation by remember { mutableStateOf(viewModel.daily.value.latitude != null) }
-
                     Button(
                         onClick = {
                                 when {

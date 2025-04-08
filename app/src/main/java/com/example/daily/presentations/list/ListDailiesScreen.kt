@@ -116,6 +116,9 @@ fun ListDailiesScreen(
         }
     }
         Scaffold (
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF303030)),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             floatingActionButton = {
                 Row (
@@ -126,30 +129,29 @@ fun ListDailiesScreen(
                         .padding(16.dp)
                 ) {
                     FloatingActionButton(
-                        onClick = {
-                            navController.navigate(Screen.AddEditDailyScreen.route)
-                        },
-                        Modifier.padding(16.dp),
+                        modifier = Modifier.padding(16.dp),
+                        onClick = { navController.navigate(Screen.StatsScreen.route) },
+                        containerColor = Color(0xFF7684A7),
+                        elevation = FloatingActionButtonDefaults.elevation(8.dp),
+                        contentColor = Color.Black,
+
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.stats_icon),
+                            contentDescription = "Statistiques"
+                        )
+                    }
+                    FloatingActionButton(
+                        onClick = { navController.navigate(Screen.AddEditDailyScreen.route) },
                         containerColor = Color(0xFF7684A7),
                         contentColor = Color.Black,
                         elevation = FloatingActionButtonDefaults.elevation(8.dp),
                         shape = MaterialTheme.shapes.medium,
-
                         )
                     {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Ajouter une routine",
-                        )
-                    }
-                    FloatingActionButton(
-                        onClick = { navController.navigate(Screen.StatsScreen.route) },
-                        containerColor = Color(0xFF7684A7),
-                        contentColor = Color.Black,
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.stats_icon),
-                            contentDescription = "Statistiques"
                         )
                     }
                 }
