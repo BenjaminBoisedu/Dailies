@@ -2,6 +2,7 @@
 agp = "8.9.1"
 androidxCoreKtx = "2.2.0"
 androidxCoreKtxVersion = "1.12.0"
+converterGson = "2.9.0"
 kotlin = "2.0.0"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -11,11 +12,13 @@ kotlinxCoroutinesPlayServices = "1.7.3"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.9.3"
 composeBom = "2024.04.01"
+loggingInterceptor = "4.9.0"
 mapsCompose = "4.3.0"
 navigationComposeVersion = "2.7.7"
 playServicesLocation = "21.3.0"
 playServicesLocationVersion = "19.0.1"
 playServicesMaps = "19.1.0"
+retrofit = "2.9.0"
 workRuntimeKtx = "2.10.0"
 coreKtxVersion = "1.6.1"
 junitKtx = "1.2.1"
@@ -29,6 +32,7 @@ hiltNavigationComposeVersion = "1.1.0"
 hiltCommon = "1.2.0"
 junitJupiter = "5.8.1"
 junitJunit = "4.12"
+runtimeLivedata = "1.7.8"
 
 
 [libraries]
@@ -36,6 +40,7 @@ junitJunit = "4.12"
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-ktx-v1120 = { module = "androidx.core:core-ktx", version.ref = "androidxCoreKtxVersion" }
 androidx-work-runtime-ktx-v281 = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtxVersion" }
+converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -66,11 +71,14 @@ androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junitJupiter" }
 junit-junit = { group = "junit", name = "junit", version.ref = "junitJunit" }
 kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutinesPlayServices" }
+logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
 maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
 play-services-locat = { module = "com.google.android.gms:play-services-locat" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 play-services-location-v1901 = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocationVersion" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

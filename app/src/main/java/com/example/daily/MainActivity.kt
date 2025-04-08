@@ -32,6 +32,8 @@ import com.example.daily.presentations.addedit.AddEditDailyScreen
 import com.example.daily.presentations.details.DetailDailyScreen
 import com.example.daily.presentations.list.ListDailiesScreen
 import com.example.daily.presentations.list.ListDailiesViewModel
+import com.example.daily.presentations.meteo.MeteoScreen
+import com.example.daily.presentations.meteo.MeteoViewModel
 import com.example.daily.presentations.navigation.Screen
 import com.example.daily.presentations.splashscreen.SplashScreen
 import com.example.daily.sensor.LocationScreen
@@ -115,7 +117,6 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         askNotificationPermission()
 
         enableEdgeToEdge()
@@ -160,6 +161,17 @@ class MainActivity : ComponentActivity() {
                                 onRequestPermission = {
                                     checkAndRequestLocationPermissions()
                                 }
+                            )
+                        }
+                        composable(Screen.MeteoScreen.route) {
+                            val viewModel: MeteoViewModel = viewModel()
+                            val hasLocationPermission = hasLocationPermissions()
+                            MeteoScreen(
+                                hasLocationPermission = hasLocationPermission,
+                                onRequestPermission = {
+                                    checkAndRequestLocationPermissions()
+                                },
+                                viewModel = viewModel
                             )
                         }
                     }
