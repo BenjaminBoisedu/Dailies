@@ -44,8 +44,10 @@ class ListDailiesViewModel @Inject constructor(
         job = dailiesUseCases.getDailies().onEach { dailies ->
             val allDailies = dailies.map { DailyVM.fromEntity(it) }
 
-            // Fonction de tri chronologique
-            val sortByDate: (DailyVM) -> Long = { daily ->
+            // Définir un comparateur qui combine priorité et date
+            val sortByPriorityAndDate = compareByDescending<DailyVM> { daily ->
+                daily.priority?.toInt() ?: Int.MIN_VALUE
+            }.thenByDescending { daily ->
                 try {
                     val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                     formatter.parse(daily.date)?.time ?: 0
@@ -54,14 +56,14 @@ class ListDailiesViewModel @Inject constructor(
                 }
             }
 
-            // Séparer et trier les deux listes
+            // Appliquer le tri aux deux listes
             _pendingDailies.value = allDailies
                 .filter { !it.done }
-                .sortedByDescending(sortByDate)
+                .sortedWith(sortByPriorityAndDate)
 
             _completedDailies.value = allDailies
                 .filter { it.done }
-                .sortedByDescending(sortByDate)
+                .sortedWith(sortByPriorityAndDate)
 
             // Maintenir la liste complète pour la compatibilité
             _dailies.value = _pendingDailies.value + _completedDailies.value
