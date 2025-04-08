@@ -2,16 +2,27 @@ package com.example.daily.presentations.list
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
+import coil.compose.AsyncImage
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -53,18 +64,45 @@ import com.example.daily.presentations.components.DailyCard
 import com.example.daily.presentations.navigation.Screen
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import com.example.daily.sensor.LocationViewModel
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.daily.presentations.meteo.MeteoViewModel
+import com.google.maps.android.compose.Circle
+import kotlin.math.roundToInt
 
 @SuppressLint("MutableCollectionMutableState", "CoroutineCreationDuringComposition",
     "SuspiciousIndentation"
 )
 @Composable
-fun ListDailiesScreen(navController: NavController, viewModel: ListDailiesViewModel  = hiltViewModel(), locationViewModel: LocationViewModel = hiltViewModel()
+fun ListDailiesScreen(
+    navController: NavController,
+    viewModel: ListDailiesViewModel  = hiltViewModel(),
+    locationViewModel: LocationViewModel = hiltViewModel(),
+    meteoviewmodel:MeteoViewModel = hiltViewModel()
 ) {
-
-    val location by locationViewModel.currentLocation.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permission accordée, mettre à jour la météo
+            meteoviewmodel.getWeatherFromCurrentLocation()
+        } else {
+            // Permission refusée, afficher un message à l'utilisateur
+            scope.launch {
+                snackbarHostState.showSnackbar("Permission de localisation refusée")
+            }
+        }
+    }
+    val weatherData by meteoviewmodel.weatherData.observeAsState()
+    val isLoading by meteoviewmodel.isLoading.observeAsState(false)
+    val error by meteoviewmodel.error.observeAsState()
 
     DisposableEffect(key1 = true) {
         locationViewModel.startLocationUpdates()
@@ -72,12 +110,6 @@ fun ListDailiesScreen(navController: NavController, viewModel: ListDailiesViewMo
             locationViewModel.stopLocationUpdates()
         }
     }
-
-    var filterByLocation by remember { mutableStateOf(false) }
-
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-
         Scaffold (
             snackbarHost = { SnackbarHost(snackbarHostState) },
             floatingActionButton = {
@@ -103,19 +135,104 @@ fun ListDailiesScreen(navController: NavController, viewModel: ListDailiesViewMo
                 .background(Color(0xFF303030)),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "Logo",
-                        modifier = Modifier
-                            .size(100.dp)
-                    )
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "Logo",
+                    modifier = Modifier
+                        .size(100.dp)
+                )
+                Row (modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .height(105.dp)
+                    .background(color = Color(0xFF303030)),
+                ) {
+                    if (weatherData == null && error == null && !isLoading) {
+                        val hasLocationPermission = ContextCompat.checkSelfPermission(
+                            navController.context,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        ) == PackageManager.PERMISSION_GRANTED
+
+                        if (hasLocationPermission) {
+                            meteoviewmodel.getWeatherFromCurrentLocation()
+                        } else {
+                            // Centrer le bouton dans la Row
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Button(
+                                    onClick = {
+                                        requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                                    },
+                                    modifier = Modifier.padding(8.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF7684A7)
+                                    )
+                                ) {
+                                    Text("Voir la météo", color = Color.White)
+                                }
+                            }
+                        }
+                    }
+                    weatherData?.let { data ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Côté gauche: icône + description
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,  // Centrage vertical ajouté
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                AsyncImage(
+                                    model = "https://openweathermap.org/img/wn/${data.weather.firstOrNull()?.icon}@4x.png",
+                                    contentDescription = "Icône météo",
+                                    modifier = Modifier.size(80.dp)
+                                        .background(
+                                            color = Color(0xFF7684A7),
+                                            shape = CircleShape
+                                        )
+                                        .clickable {
+                                            navController.navigate(Screen.MeteoScreen.route)
+                                        }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))  // Remplace le padding top
+                                Text(
+                                    text = (data.weather.firstOrNull()?.description ?: "").replaceFirstChar {
+                                        it.uppercase()
+                                    },
+                                    style = TextStyle(color = Color.White, fontSize = 16.sp)
+                                )
+                            }
+
+                            // Côté droit: ville + température
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,  // Centrage vertical ajouté
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = data.name.replaceFirstChar { it.uppercase() },
+                                    style = TextStyle(color = Color.White, fontSize = 20.sp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))  // Espacement constant
+                                Text(
+                                    text = "${data.main.temp.roundToInt()}°C",
+                                    style = TextStyle(color = Color.White, fontSize = 24.sp)
+                                )
+                            }
+                        }
+                    }
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Drawable of logo
 
                     Text(
                         text = "Mes routines",

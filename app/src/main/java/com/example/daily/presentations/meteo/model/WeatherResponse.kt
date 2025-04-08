@@ -26,7 +26,8 @@ data class Main(
     val temp_min: Double,
     val temp_max: Double,
     val pressure: Int,
-    val humidity: Int
+    val humidity: Int,
+    val icon: String
 )
 
 data class Sys(
