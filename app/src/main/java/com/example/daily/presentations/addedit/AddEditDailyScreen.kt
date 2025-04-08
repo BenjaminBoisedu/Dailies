@@ -1,7 +1,6 @@
 package com.example.daily.presentations.addedit
 
 import android.annotation.SuppressLint
-import android.content.pm.PackageManager
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,7 +26,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -66,7 +64,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -569,13 +566,49 @@ fun AddEditDailyScreen(
                     // État pour savoir si on utilise la localisation actuelle
                     var useLocation by remember { mutableStateOf(viewModel.daily.value.latitude != null) }
 
+                    LaunchedEffect(viewModel.daily.value.latitude) {
+                        useLocation = viewModel.daily.value.latitude != null
+                    }
+
+                    // Synchronisation avec les changements de localisation
+                    LaunchedEffect(currentLocation) {
+                        if (useLocation && currentLocation != null) {
+                            Log.d("AddEditDailyScreen", "Mise à jour localisation: ${currentLocation!!.latitude}, ${currentLocation!!.longitude}")
+                            viewModel.onEvent(AddEditDailyEvent.LocationSelected(
+                                latitude = currentLocation!!.latitude,
+                                longitude = currentLocation!!.longitude,
+                                locationName = "Position actuelle"
+                            ))
+                        }
+                    }
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(vertical = 8.dp)
                     ) {
                         Checkbox(
                             checked = useLocation,
-                            onCheckedChange = { useLocation = it },
+                            onCheckedChange = { newValue ->
+                                useLocation = newValue
+
+                                if (!newValue) {
+                                    // Effacer les données de localisation si désactivé
+                                    viewModel.onEvent(AddEditDailyEvent.LocationSelected(
+                                        latitude = null,
+                                        longitude = null,
+                                        locationName = null
+                                    ))
+                                    Log.d("AddEditDailyScreen", "Localisation désactivée et effacée")
+                                } else if (currentLocation != null) {
+                                    // Appliquer la localisation courante si disponible
+                                    viewModel.onEvent(AddEditDailyEvent.LocationSelected(
+                                        latitude = currentLocation!!.latitude,
+                                        longitude = currentLocation!!.longitude,
+                                        locationName = "Position actuelle"
+                                    ))
+                                    Log.d("AddEditDailyScreen", "Localisation activée: ${currentLocation!!.latitude}, ${currentLocation!!.longitude}")
+                                }
+                            },
                             colors = CheckboxDefaults.colors(
                                 checkedColor = Color(0xFF99A4BE),
                                 uncheckedColor = Color(0xFF99A4BE)
@@ -654,43 +687,20 @@ fun AddEditDailyScreen(
 
                     Button(
                         onClick = {
-                            when {
-                                viewModel.daily.value.title.isBlank() -> {
-                                    viewModel.onEvent(AddEditDailyEvent.SaveDaily) // This will trigger ShowMessage event
-                                }
-                                viewModel.daily.value.description?.isBlank() != false -> {
-                                    viewModel.onEvent(AddEditDailyEvent.SaveDaily) // This will trigger ShowMessage event
-                                }
-                                viewModel.daily.value.date.isBlank() -> {
-                                    viewModel.onEvent(AddEditDailyEvent.SaveDaily) // This will trigger ShowMessage event
-                                }
-                                viewModel.daily.value.time.isBlank() -> {
-                                    viewModel.onEvent(AddEditDailyEvent.SaveDaily) // This will trigger ShowMessage event
-                                }
-                                viewModel.daily.value.priority == null -> {
-                                    viewModel.onEvent(AddEditDailyEvent.SaveDaily) // This will trigger ShowMessage event
-                                }
-                                else -> {
-                                    // Traiter la localisation avant de sauvegarder
-                                    if (useLocation && currentLocation != null) {
-                                        viewModel.onEvent(AddEditDailyEvent.LocationSelected(
-                                            latitude = currentLocation!!.latitude,
-                                            longitude = currentLocation!!.longitude,
-                                            locationName = "Position actuelle"
-                                        ))
-                                    } else {
-                                        // Si on n'utilise pas la localisation, effacer les données existantes
-                                        viewModel.onEvent(AddEditDailyEvent.LocationSelected(
-                                            latitude = null,
-                                            longitude = null,
-                                            locationName = null
-                                        ))
+                                when {
+                                    viewModel.daily.value.title.isBlank() ||
+                                            viewModel.daily.value.description?.isBlank() != false ||
+                                            viewModel.daily.value.date.isBlank() ||
+                                            viewModel.daily.value.time.isBlank() ||
+                                            viewModel.daily.value.priority == null -> {
+                                        viewModel.onEvent(AddEditDailyEvent.SaveDaily) // Déclenchera ShowMessage
                                     }
-
-                                    viewModel.onEvent(AddEditDailyEvent.SaveDaily)
-                                    navController.navigate(Screen.DailiesListScreen.route)
+                                    else -> {
+                                        // La localisation est déjà gérée par les effets et la case à cocher
+                                        viewModel.onEvent(AddEditDailyEvent.SaveDaily)
+                                        navController.navigate(Screen.DailiesListScreen.route)
+                                    }
                                 }
-                            }
                         },
                         modifier = Modifier.fillMaxWidth()
                             .height(50.dp),

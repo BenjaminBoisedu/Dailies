@@ -1,9 +1,7 @@
 package com.example.daily.presentations.addedit
 
-import android.Manifest
 import android.location.Location
 import android.util.Log
-import androidx.annotation.RequiresPermission
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
@@ -14,11 +12,13 @@ import com.example.daily.presentations.PriorityType
 import com.example.daily.presentations.addedit.AddEditDailyUiEvent.*
 import com.example.daily.presentations.list.DailyVM
 import com.example.daily.presentations.list.toEntity
-import com.example.daily.sensor.LocationViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -53,11 +53,22 @@ class AddEditDailyViewModel @Inject constructor(
     val eventFlow = _eventFlow.asSharedFlow()
 
     // Variable pour suivre si l'utilisateur a choisi d'utiliser la localisation
-    private val _useLocation = mutableStateOf(false)
-
+    private val _useLocation = MutableStateFlow(false)
+    val useLocation: StateFlow<Boolean> = _useLocation.asStateFlow()
 
     // Variable pour stocker la dernière position connue
     private val _currentLocation = mutableStateOf<Location?>(null)
+    val currentLocation: State<Location?> = _currentLocation
+
+    private fun updateLocationData(location: Location) {
+        Log.d(TAG, "Mise à jour des données de localisation: ${location.latitude}, ${location.longitude}")
+        _currentLocation.value = location
+        _daily.value = _daily.value.copy(
+            latitude = location.latitude,
+            longitude = location.longitude,
+            locationName = "Position actuelle"
+        )
+    }
 
     init {
         val dailyId = savedStateHandle.get<Int>("dailyId") ?: -1
@@ -113,21 +124,6 @@ class AddEditDailyViewModel @Inject constructor(
         }
     }
 
-    // Méthode pour mettre à jour les données de localisation dans le ViewModel
-    private fun updateLocationData(location: Location) {
-        Log.d(TAG, "Mise à jour des données de localisation dans le ViewModel")
-
-        _daily.value = _daily.value.copy(
-            latitude = location.latitude,
-            longitude = location.longitude,
-            locationName = "Position actuelle"  // Valeur par défaut
-        )
-
-        Log.d(TAG, "Données de localisation mises à jour: " +
-                "Latitude=${String.format("%.6f", location.latitude)}, " +
-                "Longitude=${String.format("%.6f", location.longitude)}")
-    }
-
     fun onEvent(event: AddEditDailyEvent) {
         when (event) {
             is AddEditDailyEvent.EnteredTitle -> {
@@ -161,6 +157,15 @@ class AddEditDailyViewModel @Inject constructor(
                 Log.d(TAG, "Localisation sélectionnée manuellement: latitude=${event.latitude}, longitude=${event.longitude}, nom=${event.locationName}")
                 // Mettre à jour l'état useLocation en fonction des données reçues
                 _useLocation.value = event.latitude != null && event.longitude != null
+                Log.d(TAG, "Utilisation de la localisation: $useLocation")
+
+                _daily.value = _daily.value.copy(
+                    latitude = event.latitude,
+                    longitude = event.longitude,
+                    locationName = event.locationName
+                )
+                Log.d(TAG, "Daily mise à jour avec localisation: lat=${_daily.value.latitude}, long=${_daily.value.longitude}")
+
             }
 
 
