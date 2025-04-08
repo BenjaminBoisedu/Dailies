@@ -1,46 +1,81 @@
 # Daily : Votre meilleur ami du quotidien
 
-## Cette application vous est proposée par : 
-* Noé Blumzak
-* Maxime Legru 
-* Benjamin Boisedu 
+Cette application vous est proposée par :  
+- **Noé Blumzak**  
+- **Maxime Legru**  
+- **Benjamin Boisedu**
 
-## Comment utiliser notre application :
-* Pour commencer, vous pouvez installer notre application sur votre smartphone via Android Studio, puis plus tard via votre store dédié (Google Play, AppStore, ...)
-* Une fois l'installation effectuée, vous lancez l'application et arrivez sur l'écran d'accueil.
+---
 
-* En haut de l'écran, vous pouvez consulter la météo actuelle sur votre position.
-* En cliquant sur l'icone de la météo, vous accédez aux différents détails de celle-ci.
+## 📱 Comment utiliser notre application
 
-* Vous pouvez ajouter une daily via le bouton en bas à droite de votre écran.
-* Cette daily a un titre, une description, un type de priorité (standard, haute), une date, une heure, une récurrence, une alerte de notification avant le lancement de la routine, et la position de la routine.
+Pour commencer, vous pouvez installer notre application sur votre smartphone via **Android Studio**, puis plus tard via votre store dédié (*Google Play*, *App Store*, ...).
 
-* Après l'avoir défini, vous revenez sur l'écran d'accueil et vous retrouvez l'ensemble de vos dailies.
-* Ces dailies sont triées par ordre de completion (non complétée en première, complétée en deuxième), puis par ordre de priorité, et enfin par ordre chronologique.
+Une fois l’installation effectuée, lancez l’application : vous arrivez sur l’écran d’accueil.
 
-* Lorsque vous complétez votre daily, celle-ci est ajoutée aux statistiques.
-* Vous pouvez consultez les performances de votre productivité à tout moment en appuyant sur le bouton en bas à droite de votre écran.
+- 📍 En haut de l’écran, vous pouvez consulter la **météo actuelle** à votre position.  
+- ☁️ En cliquant sur l’icône de la météo, vous accédez aux **détails complets**.  
+- ➕ Vous pouvez ajouter une **daily** via le bouton situé en bas à droite de votre écran.
 
-## Résumé des fonctionnalité :
-* Routines :
-  * Création d'une routine,
-    * Titre
-    * Description
-    * Priorité
-    * Date
-    * Heure
-    * Récurrence
-    * Notification
-    * Position
-    * Statut de complétion
-  * Modification d'une routine
-  * Suppression d'une routine
-  * Routines triées sur la page d'accueil.
+---
 
-* Météo :
-  * Consulter la météo (nécessite la localisation).
-  * Accédez aux détails de la météo.
- 
-* Statistiques :
-  * Mise à jour en fonctions des dailies effectuées.
-  * Graphique associé.
+## 📝 Création d’une *daily*
+
+Chaque *daily* contient les éléments suivants :
+- **Titre**
+- **Description**
+- **Priorité** : standard ou haute
+- **Date**
+- **Heure**
+- **Récurrence**
+- **Notification** avant le lancement de la routine
+- **Position géographique**
+- **Statut de complétion**
+
+Une fois définie, la routine apparaît sur l’écran d’accueil avec toutes vos autres *dailies*.
+
+---
+
+## 📊 Tri des *dailies*
+
+Les *dailies* sont triées dans l’ordre suivant :
+1. Non complétées
+2. Complétées  
+Ensuite, elles sont triées :
+- Par priorité (haute d’abord)
+- Puis par ordre chronologique
+
+---
+
+## 📈 Statistiques
+
+- Lorsqu’une *daily* est complétée, elle est ajoutée aux **statistiques de productivité**.
+- Vous pouvez consulter vos performances à tout moment en appuyant sur le bouton situé en bas à droite de l’écran.
+- Un **graphique** illustre l’évolution de vos accomplissements.
+
+---
+
+## ✅ Résumé des fonctionnalités
+
+### Routines :
+- Création d’une routine avec :
+  - Titre
+  - Description
+  - Priorité
+  - Date
+  - Heure
+  - Récurrence
+  - Notification
+  - Position
+  - Statut de complétion
+- Modification d’une routine
+- Suppression d’une routine
+- Tri automatique des routines sur la page d’accueil
+
+### Météo :
+- Consultation de la météo actuelle (requiert la localisation)
+- Accès aux détails météo
+
+### Statistiques :
+- Mise à jour en fonction des *dailies* effectuées
+- Graphique de productivité
