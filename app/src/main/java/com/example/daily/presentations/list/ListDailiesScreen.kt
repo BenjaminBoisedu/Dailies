@@ -143,11 +143,11 @@ fun ListDailiesScreen(
                     }
                     FloatingActionButton(
                         onClick = { navController.navigate(Screen.StatsScreen.route) },
-                        containerColor = Color(0xFF99A4BE),
-                        contentColor = Color.White
+                        containerColor = Color(0xFF7684A7),
+                        contentColor = Color.Black,
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.List,
+                            painter = painterResource(R.drawable.stats_icon),
                             contentDescription = "Statistiques"
                         )
                     }
