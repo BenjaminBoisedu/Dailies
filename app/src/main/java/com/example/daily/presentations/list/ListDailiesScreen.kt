@@ -5,7 +5,6 @@ import androidx.compose.foundation.Image
 import coil.compose.AsyncImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,6 +21,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.offset
 import androidx.core.content.ContextCompat
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -169,7 +171,7 @@ fun ListDailiesScreen(
                 Row (modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
-                    .height(110.dp)
+                    .height(120.dp)
                     .background(color = Color(0xFF303030)),
                 ) {
                     if (weatherData == null && error == null && !isLoading) {
@@ -202,54 +204,88 @@ fun ListDailiesScreen(
                         }
                     }
                     weatherData?.let { data ->
-                        Row(
+                        Box(
                             modifier = Modifier
-                                .padding(horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(0.dp)
+                                .offset(x =  (-20).dp)
+                                .fillMaxWidth()
+                                .height(120.dp)
                         ) {
+                            // Conteneur pour les informations météo
                             Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center,  // Centrage vertical ajouté
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 40.dp) // Espace pour l'icône qui va chevaucher
+                                    .align(Alignment.CenterEnd),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                AsyncImage(
-                                    model = "https://openweathermap.org/img/wn/${data.weather.firstOrNull()?.icon}@4x.png",
-                                    contentDescription = "Icône météo",
+                                Column(
                                     modifier = Modifier
-                                        .size(80.dp)
+                                        .width(300.dp)
+                                        .padding(horizontal = 10.dp, vertical = 8.dp)
                                         .background(
-                                            color = Color(0xFF7684A7),
+                                            color = Color(0xFFE1E2EC),
                                             shape = CircleShape
                                         )
-                                        .clickable {
-                                            navController.navigate(Screen.MeteoScreen.route)
-                                        }
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))  // Remplace le padding top
+                                        .border(
+                                            width = 3.dp,
+                                            color = Color(0xFFFFFFFF),
+                                            shape = CircleShape
+                                        ),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Column (
+                                        modifier = Modifier
+                                            .padding(start = 40.dp)
+                                            .background(Color.Transparent),
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+
+                                    ) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = data.name.replaceFirstChar { it.uppercase() },
+                                            style = TextStyle(
+                                                color = Color(0xFF7684A7),
+                                                fontSize = 20.sp
+                                            )
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "${data.main.temp.roundToInt()}°C",
+                                            style = TextStyle(
+                                                color = Color(0xFF7684A7),
+                                                fontSize = 21.sp
+                                            )
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                    }
+                                }
                                 Text(
-                                    text = (data.weather.firstOrNull()?.description ?: "").replaceFirstChar {
-                                        it.uppercase()
-                                    },
-                                    style = TextStyle(color = Color.White, fontSize = 16.sp)
+                                    text = (data.weather.firstOrNull()?.description
+                                        ?: "").replaceFirstChar { it.uppercase() },
+                                    style = TextStyle(color = Color.White, fontSize = 20.sp)
                                 )
                             }
 
-                            // Côté droit: ville + température
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center,  // Centrage vertical ajouté
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = data.name.replaceFirstChar { it.uppercase() },
-                                    style = TextStyle(color = Color.White, fontSize = 20.sp)
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))  // Espacement constant
-                                Text(
-                                    text = "${data.main.temp.roundToInt()}°C",
-                                    style = TextStyle(color = Color.White, fontSize = 24.sp)
-                                )
-                            }
+                            // L'image météo en chevauchement
+                            AsyncImage(
+                                model = "https://openweathermap.org/img/wn/${data.weather.firstOrNull()?.icon}@4x.png",
+                                contentDescription = "Icône météo",
+                                modifier = Modifier
+                                    .size(90.dp)
+                                    .align(Alignment.CenterStart)
+                                    .offset(x = 75.dp, y = -10.dp) // Ajustez la position ici
+                                    .background(
+                                        color = Color(0xFF7684A7),
+                                        shape = CircleShape
+                                    )
+                                    .clickable {
+                                        navController.navigate(Screen.MeteoScreen.route)
+                                    }
+                            )
                         }
                     }
                 }

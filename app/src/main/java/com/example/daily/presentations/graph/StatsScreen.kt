@@ -103,6 +103,7 @@ fun StatsScreen(
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun StatsContent(data: SortedMap<String, Int>) {
     Column {
