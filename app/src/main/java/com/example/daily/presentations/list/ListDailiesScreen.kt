@@ -207,6 +207,26 @@ fun ListDailiesScreen(navController: NavController, viewModel: ListDailiesViewMo
                                     disabledTrailingIconColor = Color.White,
                                 )
                             )
+                            DropdownMenuItem(
+                                modifier = Modifier.background(Color.Transparent),
+                                text = { Text("Météo") },
+                                onClick = { navController.navigate(Screen.MeteoScreen.route) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.LocationOn,
+                                        contentDescription = null,
+                                        tint = Color.White
+                                    )
+                                },
+                                colors = MenuItemColors(
+                                    textColor = Color.White,
+                                    leadingIconColor = Color.White,
+                                    trailingIconColor = Color.White,
+                                    disabledTextColor = Color.White,
+                                    disabledLeadingIconColor = Color.White,
+                                    disabledTrailingIconColor = Color.White,
+                                )
+                            )
                         }
                     }
 

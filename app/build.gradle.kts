@@ -51,6 +51,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
 
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.logging.interceptor)
+
     // Compose dependencies
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
@@ -64,6 +68,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.junit.junit)
