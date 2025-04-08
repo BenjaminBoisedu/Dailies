@@ -413,8 +413,7 @@ fun ListDailiesScreen(
                         }
                     }
 
-                    // Section des tâches terminées
-                    if (viewModel.completedDailies.value.isNotEmpty()) {
+                    if (viewModel.completedDailies.value.isNotEmpty()){
                         items(viewModel.completedDailies.value) { daily ->
                             DailyCard(
                                 daily = daily,

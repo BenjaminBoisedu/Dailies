@@ -123,41 +123,6 @@ fun DailyCard(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                if (daily.isRecurring && daily.recurringDays.isNotEmpty()) {
-
-                    val daysText = daily.recurringDays.joinToString(" ") { day ->
-                        // Convertir le nom complet du jour en abréviation
-                        when(day.lowercase().trim()) {
-                            "lundi" -> "Lu"
-                            "mardi" -> "Ma"
-                            "mercredi" -> "Me"
-                            "jeudi" -> "Je"
-                            "vendredi" -> "Ve"
-                            "samedi" -> "Sa"
-                            "dimanche" -> "Di"
-                            else -> day // Garder le texte original si format inconnu
-                        }
-                    }
-
-
-                    Text(
-                        text = daysText,
-                        modifier = Modifier
-                            .offset(y = (-11).dp, x = (20).dp)
-                            .padding(horizontal = 8.dp)
-                            .background(Color.White, RoundedCornerShape(bottomStart = 12.dp))
-                            .padding(8.dp),
-                        style = TextStyle(
-                            fontSize = 15.sp,
-                            color = Color(0xFF303030),
-                            textAlign = TextAlign.Start,
-                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
             Column  {
                 Text(
