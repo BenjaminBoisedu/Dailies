@@ -7,5 +7,6 @@ sealed class Screen(val route: String) {
     data object DetailDailyScreen : Screen(route = "detail_daily_screen")
     data object LocationScreen : Screen(route = "location_screen")
     data object MeteoScreen : Screen("meteo_screen")
+    data object StatsScreen : Screen(route = "stats_screen")
 }
 

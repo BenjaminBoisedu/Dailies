@@ -1,5 +1,6 @@
 package com.example.daily
 
+import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -30,6 +31,7 @@ import androidx.work.WorkManager
 import com.example.daily.data.source.DailiesDatabase
 import com.example.daily.presentations.addedit.AddEditDailyScreen
 import com.example.daily.presentations.details.DetailDailyScreen
+import com.example.daily.presentations.graph.StatsScreen
 import com.example.daily.presentations.list.ListDailiesScreen
 import com.example.daily.presentations.list.ListDailiesViewModel
 import com.example.daily.presentations.meteo.MeteoScreen
@@ -76,8 +78,8 @@ class MainActivity : ComponentActivity() {
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val fineLocationGranted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-        val coarseLocationGranted = permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
 
         if (fineLocationGranted || coarseLocationGranted) {
             // Permissions accordées
@@ -175,6 +177,13 @@ class MainActivity : ComponentActivity() {
                                 navController = navController
                             )
                         }
+                        composable(Screen.StatsScreen.route) {
+                            val viewModel: ListDailiesViewModel = viewModel()
+                            StatsScreen(
+                                viewModel,
+                                navController = TODO()
+                            )
+                        }
                     }
                 }
             }
@@ -183,11 +192,11 @@ class MainActivity : ComponentActivity() {
 
     private fun hasLocationPermissions(): Boolean {
         val fineLocationGranted = ContextCompat.checkSelfPermission(
-            this, android.Manifest.permission.ACCESS_FINE_LOCATION
+            this, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
 
         val coarseLocationGranted = ContextCompat.checkSelfPermission(
-            this, android.Manifest.permission.ACCESS_COARSE_LOCATION
+            this, Manifest.permission.ACCESS_COARSE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
 
         return fineLocationGranted || coarseLocationGranted
@@ -197,8 +206,8 @@ class MainActivity : ComponentActivity() {
         if (!hasLocationPermissions()) {
             locationPermissionLauncher.launch(
                 arrayOf(
-                    android.Manifest.permission.ACCESS_FINE_LOCATION,
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
                 )
             )
         }
@@ -240,8 +249,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun askLocalisationPermission() {
-        val fineLocationPermission = android.Manifest.permission.ACCESS_FINE_LOCATION
-        val coarseLocationPermission = android.Manifest.permission.ACCESS_COARSE_LOCATION
+        val fineLocationPermission = Manifest.permission.ACCESS_FINE_LOCATION
+        val coarseLocationPermission = Manifest.permission.ACCESS_COARSE_LOCATION
 
         if (ContextCompat.checkSelfPermission(this, fineLocationPermission) != PackageManager.PERMISSION_GRANTED &&
             ContextCompat.checkSelfPermission(this, coarseLocationPermission) != PackageManager.PERMISSION_GRANTED
