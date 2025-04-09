@@ -663,7 +663,7 @@ fun AddEditDailyScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
-                        checked = viewModel.daily.value.done && viewModel.daily.value.DateDone != currentDate,
+                        checked = viewModel.daily.value.done,
                         onCheckedChange = {
                             viewModel.onEvent(AddEditDailyEvent.DailyDone)
                             viewModel.onEvent(AddEditDailyEvent.DateDoneSelected(currentDate))
