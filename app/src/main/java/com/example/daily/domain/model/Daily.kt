@@ -20,5 +20,6 @@ data class Daily(
     val recurringDays: String? = null,
     val isRecurring: Boolean = false,
     val notificationTime: String = "30",  // Default 30 minutes before
+    val DateDone: String? = null,
 ) {
 }

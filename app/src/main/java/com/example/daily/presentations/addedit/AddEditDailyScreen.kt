@@ -78,6 +78,7 @@ import com.example.daily.presentations.navigation.Screen
 import com.example.daily.sensor.LocationViewModel
 import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.Locale
 
@@ -654,14 +655,19 @@ fun AddEditDailyScreen(
                     }
                 }
 
+                val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Calendar.getInstance().time)
+                Log.d("AddEditDailyScreen", "Date actuelle: $currentDate")
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
-                        checked = viewModel.daily.value.done,
+                        checked = viewModel.daily.value.done && viewModel.daily.value.DateDone != currentDate,
                         onCheckedChange = {
                             viewModel.onEvent(AddEditDailyEvent.DailyDone)
+                            viewModel.onEvent(AddEditDailyEvent.DateDoneSelected(currentDate))
+                            Log.d("AddEditDailyScreen", "Date de complétion mise à jour: $currentDate")
                         },
                         modifier = Modifier.align(Alignment.CenterVertically),
                         colors = CheckboxDefaults.colors(

@@ -2,10 +2,12 @@ package com.example.daily.presentations.graph
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,104 +18,186 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.daily.presentations.list.ListDailiesViewModel
+
 import java.util.SortedMap
-import java.util.Calendar
-import java.text.SimpleDateFormat
+import java.util.Locale
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @SuppressLint("DefaultLocale")
 @Composable
 fun StatsScreen(
-    viewModel: ListDailiesViewModel,
-    statsViewModel: StatsViewModel,
-    navController: NavController
+    viewModel: StatsViewModel = hiltViewModel(),
+    navController: NavController? = null
 ) {
-    val statsData by statsViewModel.statsData.collectAsState()
-    val isLoading by statsViewModel.isLoading.collectAsState()
-
-    // Fusion des données du ViewModel et des données calculées localement
-    val mergedData = remember(statsData, viewModel.dailies.value) {
-        val dailies = viewModel.dailies.value
-        val completedDailies = dailies.filter { it.done }
-
-        // Combiner les données du repository avec celles calculées localement
-        val completedByDate = completedDailies
-            .groupBy { it.date }
-            .mapValues { entry -> entry.value.size }
-
-        // Fusionner avec les données du StatsViewModel
-        val merged = (statsData.keys + completedByDate.keys).associateWith { date ->
-            val fromStats = statsData[date] ?: 0
-            val fromLocal = completedByDate[date] ?: 0
-            maxOf(fromStats, fromLocal)
-        }
-
-        merged.toSortedMap()
-    }
+    val statsData by viewModel.statsData.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val incompleteDailies by viewModel.incompleteDailies.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF202020))
             .padding(16.dp)
     ) {
-        // En-tête
         Row(
-            modifier = Modifier.fillMaxWidth()
-            .padding(top = 25.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            // Titre de la page
             Text(
                 text = "Statistiques",
                 style = MaterialTheme.typography.headlineMedium,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
             )
-
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Retour",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
+            // Icon ou bouton de retour
+            if (navController != null) {
+                IconButton(onClick = { navController.navigateUp() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Retour",
+                        tint = Color.White
+                    )
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
 
-        if (isLoading && mergedData.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Color(0xFF99A4BE))
-            }
-        } else if (mergedData.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = "Aucune routine complétée pour le moment",
-                    color = Color.White,
-                    textAlign = TextAlign.Center
-                )
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
         } else {
-            // Contenu des statistiques
-            StatsContent(data = mergedData)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Section graphique existante
+                if (statsData.isNotEmpty()) {
+                    StatsContent(statsData.toSortedMap(), onFixDates = { viewModel.fixMissingDates() })
+                } else {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "Aucune donnée disponible")
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Statistiques générales existantes
+                Text(
+                    text = "Statistiques générales",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                StatItem(
+                    title = "Total de routines complétées",
+                    value = statsData.values.sum().toString()
+                )
+                StatItem(
+                    title = "Total de routines non complétées",
+                    value = incompleteDailies.size.toString()
+                )
+                StatItem(
+                    title = "Total de routines",
+                    value = (statsData.values.sum() + incompleteDailies.size).toString()
+                )
+                StatItem(
+                    title = "Moyenne de routines complétées par jour",
+                    value = if (statsData.isNotEmpty()) {
+                        String.format("%.2f", statsData.values.average())
+                    } else {
+                        "0.00"
+                    }
+                )
+
+                // Nouvelle section pour les routines non terminées
+                if (incompleteDailies.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Routines non terminées",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF303030))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            incompleteDailies.forEach { daily ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = daily.title,
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+
+                                }
+
+                                // Afficher la description (optionnel)
+                                if (daily.description.isNotEmpty()) {
+                                    Text(
+                                        text = daily.description,
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
+                                    )
+                                }
+
+                                Divider(
+                                    color = Color.White.copy(alpha = 0.2f),
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun StatsContent(data: SortedMap<String, Int>) {
+fun StatsContent(
+    data: SortedMap<String, Int>,
+    onFixDates: () -> Unit
+) {
     Column {
-        // Graphique avec Compose Canvas
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -132,68 +216,60 @@ fun StatsContent(data: SortedMap<String, Int>) {
                     fontWeight = FontWeight.Bold
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                SimpleBarChart(
-                    data = data,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(220.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Résumé des statistiques
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF303030))
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "Résumé",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                val totalCompleted = data.values.sum()
-                val bestDay = data.maxByOrNull { it.value }
-                val averagePerDay = if (data.isNotEmpty()) {
-                    data.values.sum().toFloat() / data.size
-                } else 0f
-
-                StatItem(
-                    title = "Total des routines complétées",
-                    value = totalCompleted.toString()
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                val currentDate = LocalDate.now()
-                val formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.getDefault())
-                val formattedDate = currentDate.format(formatter)
-
-                bestDay?.let {
-                    StatItem(
-                        title = "Meilleur jour",
-                        value = "$formattedDate : ${it.value} routines"
-                    )
+                // Afficher un avertissement si des routines sans date existent
+                if (data.containsKey("Non défini")) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "${data["Non défini"]} routines sans date",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Yellow
+                        )
+                        Button(
+                            onClick = onFixDates,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF005FAF)),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text("Corriger", fontSize = 12.sp)
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                StatItem(
-                    title = "Moyenne par jour",
-                    value = String.format("%.1f", averagePerDay)
+                // Formatter pour parser les dates au format dd-MM-yyyy
+                val inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+                // Formatter pour l'affichage au format jour mois
+                val displayFormatter = DateTimeFormatter.ofPattern("dd MMM", Locale.getDefault())
+
+                // Conversion et regroupement des données par jour
+                val groupedData = mutableMapOf<String, Int>()
+
+                data.forEach { (dateStr, count) ->
+                    if (dateStr == "Non défini") {
+                        groupedData["Non défini"] = count
+                    } else {
+                        try {
+                            val date = LocalDate.parse(dateStr, inputFormatter)
+                            val formattedDate = date.format(displayFormatter)
+                            groupedData[formattedDate] = (groupedData[formattedDate] ?: 0) + count
+                        } catch (e: Exception) {
+                            groupedData[dateStr] = count
+                        }
+                    }
+                }
+
+                SimpleBarChart(
+                    data = groupedData.toSortedMap(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
                 )
+
             }
         }
     }
@@ -206,9 +282,8 @@ fun SimpleBarChart(
 ) {
     if (data.isEmpty()) return
 
-    // Trier les données par date
-    val sortedData = data.toSortedMap()
-    val maxValue = sortedData.values.maxOrNull() ?: 1
+    val sortedData = data.entries.toList()
+    val maxValue = sortedData.maxOfOrNull { it.value } ?: 1
 
     Box(modifier = modifier) {
         Canvas(
@@ -216,30 +291,32 @@ fun SimpleBarChart(
                 .fillMaxSize()
                 .padding(
                     top = 20.dp,
-                    bottom = 30.dp,
+                    bottom = 40.dp,
                     start = 10.dp,
                     end = 10.dp
                 )
         ) {
-            val barWidth = size.width / (sortedData.size * 2)
-            val maxHeight = size.height - 30
+            val barWidth = (size.width - 10) / (sortedData.size * 3f)
+            val maxHeight = size.height - 60
+            val spaceBetweenBars = barWidth * 0.5f
 
             // Dessiner les barres
-            sortedData.entries.forEachIndexed { index, entry ->
+            sortedData.forEachIndexed { index, entry ->
                 val barHeight = (entry.value.toFloat() / maxValue) * maxHeight
-                val xOffset = index * (barWidth * 2) + barWidth / 2
+                val xOffset = index * (barWidth + spaceBetweenBars) + 10
 
+                // Dessiner la barre
                 drawRect(
-                    color = Color(0xFF99A4BE),
-                    topLeft = Offset(xOffset, size.height - barHeight),
+                    color = Color(0xFF7684A7),
+                    topLeft = Offset(xOffset, size.height - 40 - barHeight),
                     size = Size(barWidth, barHeight)
                 )
 
-                // Dessiner les valeurs au-dessus des barres
+                // Dessiner la valeur au-dessus de la barre
                 drawContext.canvas.nativeCanvas.drawText(
                     entry.value.toString(),
                     xOffset + barWidth / 2,
-                    size.height - barHeight - 10,
+                    size.height - 40 - barHeight - 10,
                     androidx.compose.ui.graphics.Paint().asFrameworkPaint().apply {
                         color = Color.White.toArgb()
                         textSize = 12.sp.toPx()
@@ -247,17 +324,13 @@ fun SimpleBarChart(
                     }
                 )
 
-                val currentDate = LocalDate.now()
-                val formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.getDefault())
-                val formattedDate = currentDate.format(formatter)
-
-                // Dessiner les labels des dates en bas
+                // Dessiner la date sous la barre
                 drawContext.canvas.nativeCanvas.drawText(
-                    formattedDate,
+                    entry.key,
                     xOffset + barWidth / 2,
-                    size.height + 15,
+                    size.height - 10,
                     androidx.compose.ui.graphics.Paint().asFrameworkPaint().apply {
-                        color = Color.White.copy(alpha = 0.7f).toArgb()
+                        color = Color.White.copy(alpha = 0.8f).toArgb()
                         textSize = 12.sp.toPx()
                         textAlign = android.graphics.Paint.Align.CENTER
                     }

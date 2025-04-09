@@ -135,7 +135,8 @@ data class DailyVM(
     val isRecurring: Boolean = false,
     val recurringType: String? = "", // "daily", "weekly", "monthly"
     val recurringDays: List<String>,// Utilisation d'une liste de chaînes
-    val notificationTime: String? = "30" // Default 30 minutes before
+    val notificationTime: String? = "30", // Default 30 minutes before
+    val DateDone: String? = null // Date when the task was marked as done
 
 ){
     companion object {
@@ -154,7 +155,8 @@ data class DailyVM(
                 isRecurring = entity.isRecurring,
                 recurringType = entity.recurringType,
                 recurringDays = entity.recurringDays?.split(",") ?: emptyList(),
-                notificationTime = entity.notificationTime
+                notificationTime = entity.notificationTime,
+                DateDone = entity.DateDone
             )
         }
     }

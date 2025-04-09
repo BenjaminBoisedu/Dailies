@@ -45,7 +45,8 @@ class AddEditDailyViewModel @Inject constructor(
         isRecurring = false,
         recurringType = null,
         recurringDays = emptyList(),
-        notificationTime = "30" // Valeur par défaut à 30 minutes
+        notificationTime = "30", // Valeur par défaut à 30 minutes
+        DateDone = null
     ))
     val daily: State<DailyVM> = _daily
 
@@ -59,6 +60,20 @@ class AddEditDailyViewModel @Inject constructor(
     // Variable pour stocker la dernière position connue
     private val _currentLocation = mutableStateOf<Location?>(null)
     val currentLocation: State<Location?> = _currentLocation
+
+    // Je veux une variable qui recupère la date actuelle
+    private val _currentDate = mutableStateOf("")
+    val currentDate: State<String> = _currentDate
+    fun setCurrentDate(date: String) {
+        _currentDate.value = date
+    }
+    // Je veux une variable qui recupère l'heure actuelle
+    private val _currentTime = mutableStateOf("")
+    val currentTime: State<String> = _currentTime
+    fun setCurrentTime(time: String) {
+        _currentTime.value = time
+    }
+
 
     private fun updateLocationData(location: Location) {
         Log.d(TAG, "Mise à jour des données de localisation: ${location.latitude}, ${location.longitude}")
@@ -111,7 +126,8 @@ class AddEditDailyViewModel @Inject constructor(
                             isRecurring = daily.isRecurring,
                             recurringType = daily.recurringType,
                             recurringDays = recurringDaysList,
-                            notificationTime = daily.notificationTime
+                            notificationTime = daily.notificationTime,
+                            DateDone = daily.DateDone
                         )
                     } else {
                         // Gérer le cas où daily est null (routine supprimée)
@@ -166,6 +182,11 @@ class AddEditDailyViewModel @Inject constructor(
                 )
                 Log.d(TAG, "Daily mise à jour avec localisation: lat=${_daily.value.latitude}, long=${_daily.value.longitude}")
 
+            }
+
+            is AddEditDailyEvent.DateDoneSelected -> {
+                Log.d(TAG, "Date de complétion sélectionnée: ${event.date}")
+                _daily.value = _daily.value.copy(DateDone = event.date)
             }
 
 
@@ -228,7 +249,8 @@ class AddEditDailyViewModel @Inject constructor(
                         "Heure de notification: ${finalDaily.notificationTime}\n" +
                         "Latitude: ${finalDaily.latitude}\n" +
                         "Longitude: ${finalDaily.longitude}\n" +
-                        "Nom du lieu: ${finalDaily.locationName}")
+                        "Nom du lieu: ${finalDaily.locationName}\n"+
+                        "Date de complétion: ${finalDaily.DateDone}")
 
                 viewModelScope.launch {
                     if (finalDaily.title.isEmpty() || finalDaily.description?.isEmpty() != false ||

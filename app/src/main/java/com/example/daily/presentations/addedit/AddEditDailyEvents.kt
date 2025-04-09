@@ -24,4 +24,6 @@ sealed class AddEditDailyEvent {
         val locationName: String?
     ) : AddEditDailyEvent()
 
+    data class  DateDoneSelected(val date: String) : AddEditDailyEvent()
+
 }

@@ -8,7 +8,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.daily.data.converters.StringListConverter
 import com.example.daily.domain.model.Daily
 
-@Database(entities = [Daily::class], version = 7, exportSchema = false)
+@Database(entities = [Daily::class], version = 8, exportSchema = false)
 @TypeConverters(StringListConverter::class)
 abstract class DailiesDatabase : RoomDatabase() {
     abstract val dao: DailiesDao
@@ -70,6 +70,13 @@ abstract class DailiesDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // Add the recurringDays column to store selected days of the week
                 db.execSQL("ALTER TABLE dailies ADD COLUMN recurringDays TEXT DEFAULT NULL")
+            }
+        }
+
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add the DateDone column to store the date when the task was marked as done
+                db.execSQL("ALTER TABLE dailies ADD COLUMN DateDone TEXT DEFAULT NULL")
             }
         }
     }

@@ -113,7 +113,8 @@ class MainActivity : ComponentActivity() {
                 DailiesDatabase.MIGRATION_4_5,
                 DailiesDatabase.MIGRATION_3_5,
                 DailiesDatabase.MIGRATION_5_6,
-                DailiesDatabase.MIGRATION_6_7
+                DailiesDatabase.MIGRATION_6_7,
+                DailiesDatabase.MIGRATION_7_8
             )
             .build()
     }
@@ -180,11 +181,9 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(Screen.StatsScreen.route) {
-                            val viewModel: ListDailiesViewModel = hiltViewModel()
                             val statsViewModel: StatsViewModel = hiltViewModel()
                             StatsScreen(
-                                viewModel = viewModel,
-                                statsViewModel = statsViewModel,
+                                viewModel = statsViewModel,
                                 navController = navController
                             )
                         }
